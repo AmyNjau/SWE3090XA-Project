@@ -1,0 +1,17 @@
+{
+  "_meta": {
+    "description": "Specialist types referenced by conditions. 'type' must match the 'specialist' field in knowledge_base.json. 'searchKeyword' is used when querying an external places provider (e.g. Google Maps).",
+    "version": "0.1.0"
+  },
+  "specialists": [
+    { "id": "general_physician", "type": "General Physician", "description": "A first point of contact for a wide range of common health concerns.", "searchKeyword": "general practitioner doctor clinic" },
+    { "id": "neurologist", "type": "Neurologist", "description": "Specialises in disorders of the brain and nervous system.", "searchKeyword": "neurologist clinic" },
+    { "id": "gastroenterologist", "type": "Gastroenterologist", "description": "Specialises in the digestive system and its disorders.", "searchKeyword": "gastroenterologist clinic" },
+    { "id": "cardiologist", "type": "Cardiologist", "description": "Specialises in heart and blood-vessel conditions.", "searchKeyword": "cardiologist heart clinic" },
+    { "id": "pulmonologist", "type": "Pulmonologist", "description": "Specialises in the lungs and respiratory system.", "searchKeyword": "pulmonologist chest clinic" },
+    { "id": "allergist", "type": "Allergist", "description": "Specialises in allergies and immune-system reactions.", "searchKeyword": "allergist immunology clinic" },
+    { "id": "urologist", "type": "Urologist", "description": "Specialises in the urinary tract and related systems.", "searchKeyword": "urologist clinic" },
+    { "id": "ent_specialist", "type": "ENT Specialist", "description": "Specialises in ear, nose, and throat conditions.", "searchKeyword": "ENT ear nose throat clinic" },
+    { "id": "ophthalmologist", "type": "Ophthalmologist", "description": "Specialises in eye care and vision.", "searchKeyword": "ophthalmologist eye clinic" }
+  ]
+}

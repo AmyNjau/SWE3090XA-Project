@@ -1,0 +1,27 @@
+{
+  "name": "smart-health-backend",
+  "version": "0.1.0",
+  "description": "Smart Health Symptom Checker and Doctor Recommendation System - REST API and rule-based diagnostic engine.",
+  "main": "src/server.js",
+  "type": "commonjs",
+  "scripts": {
+    "setup": "node scripts/setup.js",
+    "start": "node scripts/run.js src/server.js",
+    "dev": "node scripts/run.js --watch src/server.js",
+    "test": "node scripts/run.js --test"
+  },
+  "keywords": [
+    "symptom-checker",
+    "rule-based",
+    "mhealth",
+    "digital-health",
+    "triage"
+  ],
+  "author": "Amy Wanjugu Njau",
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2"
+  }
+}

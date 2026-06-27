@@ -1,0 +1,26 @@
+# Claude Code local session/settings data
+.claude/
+
+# OS / editor cruft
+Thumbs.db
+.DS_Store
+desktop.ini
+
+# Node (backend) — node_modules lives on local disk, never in the repo
+node_modules/
+.env
+*.log
+
+# Flutter (mobile) — generated platform folders and build output
+mobile/.dart_tool/
+mobile/.flutter-plugins
+mobile/.flutter-plugins-dependencies
+mobile/build/
+mobile/android/
+mobile/ios/
+mobile/web/
+mobile/windows/
+mobile/linux/
+mobile/macos/
+mobile/.idea/
+*.iml

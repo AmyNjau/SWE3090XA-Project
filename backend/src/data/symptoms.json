@@ -1,0 +1,43 @@
+{
+  "_meta": {
+    "description": "Catalogue of symptoms the user can select. 'id' values must match the keys used in knowledge_base.json. 'common' marks symptoms surfaced as quick-pick chips on the input screen.",
+    "version": "0.1.0"
+  },
+  "symptoms": [
+    { "id": "fever", "name": "Fever", "category": "general", "common": true },
+    { "id": "headache", "name": "Headache", "category": "general", "common": true },
+    { "id": "cough", "name": "Cough", "category": "respiratory", "common": true },
+    { "id": "fatigue", "name": "Fatigue", "category": "general", "common": true },
+    { "id": "nausea", "name": "Nausea", "category": "digestive", "common": true },
+    { "id": "sore_throat", "name": "Sore Throat", "category": "respiratory", "common": true },
+    { "id": "chills", "name": "Chills", "category": "general", "common": true },
+    { "id": "runny_nose", "name": "Runny Nose", "category": "respiratory", "common": false },
+    { "id": "sneezing", "name": "Sneezing", "category": "respiratory", "common": false },
+    { "id": "nasal_congestion", "name": "Nasal Congestion", "category": "respiratory", "common": false },
+    { "id": "sweating", "name": "Sweating", "category": "general", "common": false },
+    { "id": "muscle_aches", "name": "Muscle Aches", "category": "musculoskeletal", "common": false },
+    { "id": "joint_pain", "name": "Joint Pain", "category": "musculoskeletal", "common": false },
+    { "id": "loss_of_taste_smell", "name": "Loss of Taste or Smell", "category": "neurological", "common": false },
+    { "id": "shortness_of_breath", "name": "Shortness of Breath", "category": "respiratory", "common": false },
+    { "id": "light_sensitivity", "name": "Sensitivity to Light", "category": "neurological", "common": false },
+    { "id": "visual_aura", "name": "Visual Aura", "category": "neurological", "common": false },
+    { "id": "dizziness", "name": "Dizziness", "category": "neurological", "common": false },
+    { "id": "diarrhea", "name": "Diarrhea", "category": "digestive", "common": false },
+    { "id": "vomiting", "name": "Vomiting", "category": "digestive", "common": false },
+    { "id": "abdominal_pain", "name": "Abdominal Pain", "category": "digestive", "common": false },
+    { "id": "loss_of_appetite", "name": "Loss of Appetite", "category": "digestive", "common": false },
+    { "id": "blurred_vision", "name": "Blurred Vision", "category": "eyes", "common": false },
+    { "id": "chest_pain", "name": "Chest Pain", "category": "cardiac", "common": false },
+    { "id": "chest_tightness", "name": "Chest Tightness", "category": "cardiac", "common": false },
+    { "id": "wheezing", "name": "Wheezing", "category": "respiratory", "common": false },
+    { "id": "itchy_eyes", "name": "Itchy Eyes", "category": "eyes", "common": false },
+    { "id": "red_eyes", "name": "Red Eyes", "category": "eyes", "common": false },
+    { "id": "eye_discharge", "name": "Eye Discharge", "category": "eyes", "common": false },
+    { "id": "watery_eyes", "name": "Watery Eyes", "category": "eyes", "common": false },
+    { "id": "painful_urination", "name": "Painful Urination", "category": "urinary", "common": false },
+    { "id": "frequent_urination", "name": "Frequent Urination", "category": "urinary", "common": false },
+    { "id": "difficulty_swallowing", "name": "Difficulty Swallowing", "category": "respiratory", "common": false },
+    { "id": "swollen_glands", "name": "Swollen Glands", "category": "general", "common": false },
+    { "id": "rash", "name": "Skin Rash", "category": "skin", "common": false }
+  ]
+}

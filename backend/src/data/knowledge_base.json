@@ -1,0 +1,224 @@
+{
+  "_meta": {
+    "description": "Weighted symptom-disease knowledge base for the rule-based diagnostic engine. Each condition lists symptoms mapped to a weight in the range 0..1 representing how strongly that symptom indicates the condition. This is a curated, EDUCATIONAL rule set and is NOT clinically validated. It must be reviewed and validated against recognised medical references before any real-world use.",
+    "weightScale": "0..1 (higher = stronger indicator)",
+    "version": "0.1.0"
+  },
+  "conditions": [
+    {
+      "id": "malaria",
+      "name": "Malaria",
+      "specialist": "General Physician",
+      "severity": "high",
+      "description": "A mosquito-borne infectious disease causing cyclical fever, chills, and flu-like illness.",
+      "symptoms": {
+        "fever": 0.9,
+        "chills": 0.8,
+        "headache": 0.5,
+        "fatigue": 0.4,
+        "nausea": 0.4,
+        "sweating": 0.6,
+        "muscle_aches": 0.4
+      }
+    },
+    {
+      "id": "common_cold",
+      "name": "Common Cold",
+      "specialist": "General Physician",
+      "severity": "low",
+      "description": "A mild viral infection of the nose and throat.",
+      "symptoms": {
+        "runny_nose": 0.9,
+        "sore_throat": 0.7,
+        "cough": 0.6,
+        "sneezing": 0.7,
+        "headache": 0.3,
+        "nasal_congestion": 0.6
+      }
+    },
+    {
+      "id": "influenza",
+      "name": "Influenza (Flu)",
+      "specialist": "General Physician",
+      "severity": "medium",
+      "description": "A contagious respiratory illness caused by influenza viruses, more severe than a common cold.",
+      "symptoms": {
+        "fever": 0.8,
+        "muscle_aches": 0.8,
+        "fatigue": 0.7,
+        "cough": 0.6,
+        "headache": 0.5,
+        "chills": 0.6,
+        "sore_throat": 0.4
+      }
+    },
+    {
+      "id": "covid19",
+      "name": "COVID-19",
+      "specialist": "General Physician",
+      "severity": "high",
+      "description": "A respiratory illness caused by the SARS-CoV-2 virus, ranging from mild to severe.",
+      "symptoms": {
+        "fever": 0.7,
+        "cough": 0.7,
+        "fatigue": 0.6,
+        "loss_of_taste_smell": 0.9,
+        "sore_throat": 0.4,
+        "shortness_of_breath": 0.6,
+        "headache": 0.4
+      }
+    },
+    {
+      "id": "migraine",
+      "name": "Migraine",
+      "specialist": "Neurologist",
+      "severity": "medium",
+      "description": "A neurological condition causing recurrent, often severe headaches.",
+      "symptoms": {
+        "headache": 0.9,
+        "nausea": 0.6,
+        "light_sensitivity": 0.8,
+        "visual_aura": 0.7,
+        "dizziness": 0.4
+      }
+    },
+    {
+      "id": "gastroenteritis",
+      "name": "Gastroenteritis",
+      "specialist": "Gastroenterologist",
+      "severity": "medium",
+      "description": "Inflammation of the stomach and intestines, typically from infection ('stomach flu').",
+      "symptoms": {
+        "diarrhea": 0.9,
+        "vomiting": 0.7,
+        "abdominal_pain": 0.7,
+        "nausea": 0.6,
+        "fever": 0.4
+      }
+    },
+    {
+      "id": "hypertension",
+      "name": "Hypertension (High Blood Pressure)",
+      "specialist": "Cardiologist",
+      "severity": "high",
+      "description": "Persistently elevated blood pressure, often without obvious symptoms but sometimes presenting with headaches or dizziness.",
+      "symptoms": {
+        "headache": 0.5,
+        "dizziness": 0.6,
+        "blurred_vision": 0.6,
+        "chest_pain": 0.5,
+        "shortness_of_breath": 0.4
+      }
+    },
+    {
+      "id": "asthma",
+      "name": "Asthma",
+      "specialist": "Pulmonologist",
+      "severity": "medium",
+      "description": "A chronic condition in which the airways narrow and swell, causing breathing difficulty.",
+      "symptoms": {
+        "shortness_of_breath": 0.8,
+        "wheezing": 0.9,
+        "cough": 0.6,
+        "chest_tightness": 0.7
+      }
+    },
+    {
+      "id": "allergic_rhinitis",
+      "name": "Allergic Rhinitis (Hay Fever)",
+      "specialist": "Allergist",
+      "severity": "low",
+      "description": "An allergic response causing sneezing, congestion, and itchy eyes.",
+      "symptoms": {
+        "sneezing": 0.8,
+        "runny_nose": 0.7,
+        "itchy_eyes": 0.8,
+        "nasal_congestion": 0.6
+      }
+    },
+    {
+      "id": "pneumonia",
+      "name": "Pneumonia",
+      "specialist": "Pulmonologist",
+      "severity": "high",
+      "description": "Infection that inflames the air sacs in one or both lungs.",
+      "symptoms": {
+        "cough": 0.7,
+        "fever": 0.7,
+        "shortness_of_breath": 0.8,
+        "chest_pain": 0.6,
+        "fatigue": 0.5,
+        "chills": 0.5
+      }
+    },
+    {
+      "id": "uti",
+      "name": "Urinary Tract Infection",
+      "specialist": "Urologist",
+      "severity": "medium",
+      "description": "An infection in any part of the urinary system, most often the bladder.",
+      "symptoms": {
+        "painful_urination": 0.9,
+        "frequent_urination": 0.8,
+        "abdominal_pain": 0.5,
+        "fever": 0.3
+      }
+    },
+    {
+      "id": "tonsillitis",
+      "name": "Tonsillitis",
+      "specialist": "ENT Specialist",
+      "severity": "medium",
+      "description": "Inflammation of the tonsils, usually due to viral or bacterial infection.",
+      "symptoms": {
+        "sore_throat": 0.9,
+        "fever": 0.6,
+        "difficulty_swallowing": 0.8,
+        "swollen_glands": 0.7
+      }
+    },
+    {
+      "id": "dengue",
+      "name": "Dengue Fever",
+      "specialist": "General Physician",
+      "severity": "high",
+      "description": "A mosquito-borne viral infection causing high fever and severe body aches.",
+      "symptoms": {
+        "fever": 0.9,
+        "headache": 0.6,
+        "joint_pain": 0.8,
+        "rash": 0.6,
+        "nausea": 0.5,
+        "muscle_aches": 0.7
+      }
+    },
+    {
+      "id": "typhoid",
+      "name": "Typhoid Fever",
+      "specialist": "General Physician",
+      "severity": "high",
+      "description": "A bacterial infection spread through contaminated food and water.",
+      "symptoms": {
+        "fever": 0.8,
+        "abdominal_pain": 0.6,
+        "headache": 0.5,
+        "fatigue": 0.6,
+        "diarrhea": 0.5,
+        "loss_of_appetite": 0.5
+      }
+    },
+    {
+      "id": "conjunctivitis",
+      "name": "Conjunctivitis (Pink Eye)",
+      "specialist": "Ophthalmologist",
+      "severity": "low",
+      "description": "Inflammation of the conjunctiva causing red, itchy, watery eyes.",
+      "symptoms": {
+        "red_eyes": 0.9,
+        "itchy_eyes": 0.7,
+        "eye_discharge": 0.8,
+        "watery_eyes": 0.6
+      }
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "_meta": {
+    "description": "Sample healthcare-provider records used by the mock provider source. Coordinates are around Nairobi, Kenya. When PROVIDER_SOURCE=google these are ignored in favour of live Google Maps Platform results.",
+    "version": "0.1.0"
+  },
+  "providers": [
+    { "id": "nf", "name": "Nairobi Family Clinic", "specialty": "General Physician", "latitude": -1.2641, "longitude": 36.8028, "rating": 4.6, "reviews": 214, "address": "Westlands, Nairobi" },
+    { "id": "wm", "name": "Westlands Medical Centre", "specialty": "General Physician", "latitude": -1.2685, "longitude": 36.8101, "rating": 4.3, "reviews": 168, "address": "Westlands, Nairobi" },
+    { "id": "ph", "name": "Parklands Health Hub", "specialty": "General Physician", "latitude": -1.2620, "longitude": 36.8190, "rating": 4.7, "reviews": 96, "address": "Parklands, Nairobi" },
+    { "id": "kc", "name": "Kilimani Care Practice", "specialty": "General Physician", "latitude": -1.2900, "longitude": 36.7850, "rating": 4.1, "reviews": 142, "address": "Kilimani, Nairobi" },
+    { "id": "nn", "name": "NeuroCare Nairobi", "specialty": "Neurologist", "latitude": -1.2700, "longitude": 36.8050, "rating": 4.5, "reviews": 88, "address": "Upper Hill, Nairobi" },
+    { "id": "gh", "name": "Gut Health Centre", "specialty": "Gastroenterologist", "latitude": -1.2950, "longitude": 36.7900, "rating": 4.4, "reviews": 73, "address": "Hurlingham, Nairobi" },
+    { "id": "hc", "name": "HeartCare Cardiology", "specialty": "Cardiologist", "latitude": -1.2980, "longitude": 36.8100, "rating": 4.8, "reviews": 121, "address": "Upper Hill, Nairobi" },
+    { "id": "bl", "name": "BreatheWell Lung Clinic", "specialty": "Pulmonologist", "latitude": -1.2750, "longitude": 36.8200, "rating": 4.2, "reviews": 64, "address": "Parklands, Nairobi" },
+    { "id": "al", "name": "AllergyCare Nairobi", "specialty": "Allergist", "latitude": -1.2880, "longitude": 36.7920, "rating": 4.3, "reviews": 51, "address": "Kilimani, Nairobi" },
+    { "id": "ur", "name": "UroHealth Clinic", "specialty": "Urologist", "latitude": -1.2660, "longitude": 36.8150, "rating": 4.5, "reviews": 79, "address": "Westlands, Nairobi" },
+    { "id": "en", "name": "ENT & Sinus Centre", "specialty": "ENT Specialist", "latitude": -1.2720, "longitude": 36.8080, "rating": 4.4, "reviews": 102, "address": "Westlands, Nairobi" },
+    { "id": "ey", "name": "ClearVision Eye Clinic", "specialty": "Ophthalmologist", "latitude": -1.2840, "longitude": 36.8230, "rating": 4.7, "reviews": 187, "address": "Ngara, Nairobi" }
+  ]
+}
