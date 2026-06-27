@@ -14,10 +14,21 @@ async function runDiagnosis(symptoms) {
   const store = getDataStore();
   const conditions = await store.getConditions();
 
-  const results = diagnose(symptoms, conditions, {
+  const rawResults = diagnose(symptoms, conditions, {
     threshold: config.diagnosis.threshold,
     maxResults: config.diagnosis.maxResults,
   });
+
+  // Build a symptom id -> display name map so the response can explain, in
+  // plain language, which symptoms drove each condition's score. This makes the
+  // rule-based reasoning visible to the user (the project's "explainable
+  // inference" contribution) without leaking internal ids to the UI.
+  const symptomCatalogue = await store.getSymptoms();
+  const nameById = new Map(symptomCatalogue.map((s) => [s.id, s.name]));
+  const results = rawResults.map((r) => ({
+    ...r,
+    matchedSymptomNames: r.matchedSymptoms.map((id) => nameById.get(id) || id),
+  }));
 
   const recommendedSpecialist = results.length ? results[0].specialist : null;
   let specialistInfo = null;

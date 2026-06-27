@@ -7,6 +7,7 @@ class Condition {
   final String description;
   final double confidence; // 0..100
   final List<String> matchedSymptoms;
+  final List<String> matchedSymptomNames; // plain-language, for explainability
 
   const Condition({
     required this.id,
@@ -16,6 +17,7 @@ class Condition {
     required this.description,
     required this.confidence,
     required this.matchedSymptoms,
+    this.matchedSymptomNames = const [],
   });
 
   factory Condition.fromJson(Map<String, dynamic> json) {
@@ -27,6 +29,9 @@ class Condition {
       description: json['description'] as String? ?? '',
       confidence: (json['confidence'] as num).toDouble(),
       matchedSymptoms: (json['matchedSymptoms'] as List<dynamic>? ?? [])
+          .map((e) => e.toString())
+          .toList(),
+      matchedSymptomNames: (json['matchedSymptomNames'] as List<dynamic>? ?? [])
           .map((e) => e.toString())
           .toList(),
     );

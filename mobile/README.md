@@ -69,6 +69,18 @@ backend and request location.
 > `usesCleartextTraffic` is only needed because the dev backend is plain HTTP.
 > A production build should use HTTPS and remove this.
 
+Also add a `<queries>` entry (sibling of `<application>`) so the "Directions"
+button can hand off to a map/browser app via `url_launcher`:
+
+```xml
+<queries>
+    <intent>
+        <action android:name="android.intent.action.VIEW"/>
+        <data android:scheme="https"/>
+    </intent>
+</queries>
+```
+
 ## Testing
 
 ```bash

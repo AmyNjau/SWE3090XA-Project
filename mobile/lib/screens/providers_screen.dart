@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../models/provider.dart';
 import '../services/api_service.dart';
@@ -39,6 +40,27 @@ class _ProvidersScreenState extends State<ProvidersScreen> {
     super.initState();
     _location = widget.locationService ?? LocationService();
     _load();
+  }
+
+  /// Opens the device's map app with directions to the provider. Falls back to
+  /// a message if no map app can handle the request, so it never crashes.
+  Future<void> _openDirections(Provider p) async {
+    if (p.latitude == null || p.longitude == null) return;
+    final query = '${p.latitude},${p.longitude}';
+    final uri = Uri.parse(
+      'https://www.google.com/maps/search/?api=1&query=$query',
+    );
+    bool opened = false;
+    try {
+      opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (_) {
+      opened = false;
+    }
+    if (!opened && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not open a map for ${p.name}.')),
+      );
+    }
   }
 
   Future<void> _load() async {
@@ -150,14 +172,7 @@ class _ProvidersScreenState extends State<ProvidersScreen> {
                   children: _providers
                       .map((p) => ProviderCard(
                             provider: p,
-                            onDirections: () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('Directions to ${p.name} '
-                                      '(map integration pending).'),
-                                ),
-                              );
-                            },
+                            onDirections: () => _openDirections(p),
                           ))
                       .toList(),
                 ),

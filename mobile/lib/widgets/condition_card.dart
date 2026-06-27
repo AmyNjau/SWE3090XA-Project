@@ -100,6 +100,51 @@ class ConditionCard extends StatelessWidget {
               style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
             ),
           ],
+          // Explainability: show which reported symptoms drove this match, so
+          // the rule-based reasoning is transparent to the user.
+          if (condition.matchedSymptomNames.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            const Row(
+              children: [
+                Icon(Icons.info_outline, size: 14, color: AppColors.textMuted),
+                SizedBox(width: 4),
+                Text(
+                  'Why this match',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.4,
+                    color: AppColors.textMuted,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: condition.matchedSymptomNames
+                  .map(
+                    (name) => Container(
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: color.withValues(alpha: 0.10),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        name,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: color,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  )
+                  .toList(),
+            ),
+          ],
         ],
       ),
     );

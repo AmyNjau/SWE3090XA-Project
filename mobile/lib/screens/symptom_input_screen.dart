@@ -6,6 +6,7 @@ import '../theme/app_theme.dart';
 import '../widgets/symptom_chip.dart';
 import '../widgets/disclaimer_banner.dart';
 import '../widgets/step_indicator.dart';
+import '../widgets/app_drawer.dart';
 import 'results_screen.dart';
 
 /// Screen 1: the user searches and selects symptoms, then analyses them.
@@ -101,8 +102,15 @@ class _SymptomInputScreenState extends State<SymptomInputScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      drawer: const AppDrawer(),
       appBar: AppBar(
-        leading: const Icon(Icons.menu),
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: const Icon(Icons.menu),
+            tooltip: 'Menu',
+            onPressed: () => Scaffold.of(context).openDrawer(),
+          ),
+        ),
         title: const Text('Check Your Symptoms'),
       ),
       body: Column(

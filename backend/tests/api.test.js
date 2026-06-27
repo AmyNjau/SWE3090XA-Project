@@ -46,6 +46,9 @@ test('POST /api/diagnose returns ranked conditions + specialist + disclaimer', a
     assert.strictEqual(body.recommendedSpecialist, 'General Physician');
     assert.ok(typeof body.disclaimer === 'string' && body.disclaimer.length > 0);
     assert.ok(Array.isArray(body.results[0].matchedSymptoms));
+    // Explainability: matched symptoms are also surfaced as plain-language names.
+    assert.ok(Array.isArray(body.results[0].matchedSymptomNames));
+    assert.ok(body.results[0].matchedSymptomNames.includes('Fever'));
   } finally {
     await srv.close();
   }
