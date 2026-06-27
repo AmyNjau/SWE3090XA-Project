@@ -40,12 +40,21 @@ class LocationService {
         return UserLocation.fallback;
       }
 
+      // A last-known fix returns instantly when available.
+      final last = await Geolocator.getLastKnownPosition();
+      if (last != null) {
+        return UserLocation(latitude: last.latitude, longitude: last.longitude);
+      }
+
+      // Otherwise request a fresh fix, but bound the wait so the UI never hangs
+      // (important on low-connectivity devices and emulators without a fix).
       final pos = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.medium,
+        timeLimit: const Duration(seconds: 8),
       );
       return UserLocation(latitude: pos.latitude, longitude: pos.longitude);
     } catch (_) {
-      // Any failure degrades gracefully to the fallback location.
+      // Any failure (including timeout) degrades gracefully to the fallback.
       return UserLocation.fallback;
     }
   }

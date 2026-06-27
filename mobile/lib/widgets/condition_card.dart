@@ -38,7 +38,7 @@ class ConditionCard extends StatelessWidget {
         boxShadow: emphasised
             ? [
                 BoxShadow(
-                  color: color.withOpacity(0.12),
+                  color: color.withValues(alpha: 0.12),
                   blurRadius: 16,
                   offset: const Offset(0, 4),
                 ),

@@ -51,7 +51,7 @@ class MapPlaceholder extends StatelessWidget {
             ),
             // Distribute pins across the area.
             ...List.generate(providers.length, (i) {
-              final cols = 3;
+              const cols = 3;
               final dx = 40.0 + (i % cols) * 90.0;
               final dy = 60.0 + (i ~/ cols) * 60.0;
               return Positioned(
@@ -79,7 +79,7 @@ class _GridPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.white.withOpacity(0.6)
+      ..color = Colors.white.withValues(alpha: 0.6)
       ..strokeWidth = 6;
     canvas.drawLine(Offset(0, size.height * 0.4),
         Offset(size.width, size.height * 0.55), paint);
