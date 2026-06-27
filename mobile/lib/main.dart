@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'services/api_service.dart';
 import 'theme/app_theme.dart';
-import 'screens/symptom_input_screen.dart';
+import 'screens/main_shell.dart';
 
 void main() {
   runApp(const SmartHealthApp());
@@ -31,7 +31,7 @@ class _SmartHealthAppState extends State<SmartHealthApp> {
       title: 'Smart Health',
       debugShowCheckedModeBanner: false,
       theme: buildAppTheme(),
-      home: SymptomInputScreen(api: _api),
+      home: MainShell(api: _api),
     );
   }
 }

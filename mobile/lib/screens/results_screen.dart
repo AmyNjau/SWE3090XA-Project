@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/diagnosis_result.dart';
 import '../services/api_service.dart';
+import '../state/history_store.dart';
 import '../theme/app_theme.dart';
 import '../widgets/condition_card.dart';
 import '../widgets/specialist_panel.dart';
@@ -42,6 +43,19 @@ class _ResultsScreenState extends State<ResultsScreen> {
     });
     try {
       final result = await widget.api.getDiagnosis(widget.symptomIds);
+      // Record this check in history (the "Query" entity) so it appears on the
+      // History tab and the home dashboard.
+      if (result.results.isNotEmpty) {
+        final top = result.results.first;
+        HistoryStore.instance.add(HistoryEntry(
+          timestamp: DateTime.now(),
+          symptomIds: widget.symptomIds,
+          topConditionName: top.name,
+          topConfidence: top.confidence,
+          specialist: result.recommendedSpecialist,
+          severity: top.severity,
+        ));
+      }
       setState(() {
         _result = result;
         _loading = false;

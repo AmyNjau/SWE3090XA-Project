@@ -77,6 +77,9 @@ See `backend/README.md` and `mobile/README.md` for full details.
 - ✅ Backend: knowledge base, weighted engine, specialist routing, provider
   lookup (mock + Maps-ready), caching, validation, query logging, disclaimer.
 - ✅ Tests: 15 backend tests passing; Flutter widget/model tests included.
-- ✅ Mobile: all three screens, shared theme, graceful location fallback.
+- ✅ Mobile: premium tabbed shell (Home, Check, History, Profile) with a
+  dashboard, the full symptom→conditions→providers flow, explainable
+  "why this match" results, in-app history (Query entity), and a profile
+  (User entity). Shared theme, graceful location fallback, live Directions.
 - ⏭️ Next: real Firestore + Google Maps keys, auth, clinical validation of the
   knowledge base, accessibility hardening, UAT.

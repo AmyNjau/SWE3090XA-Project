@@ -11,6 +11,29 @@ class AppColors {
   static const Color textPrimary = Color(0xFF1B2733);
   static const Color textMuted = Color(0xFF6B7785);
 
+  // Premium surface + accent tokens.
+  static const Color bg = Color(0xFFF4F7FC); // app background behind cards
+  static const Color border = Color(0xFFE6E9EE);
+  static const Color green = Color(0xFF1FA97D); // tips / positive
+  static const Color amber = Color(0xFFE8A33D);
+  static const Color violet = Color(0xFF6C5CE7);
+
+  /// Hero gradient used on dashboard / profile headers.
+  static const LinearGradient heroGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [Color(0xFF21457E), Color(0xFF2F6FED)],
+  );
+
+  /// Soft elevation used on premium cards.
+  static List<BoxShadow> softShadow = [
+    BoxShadow(
+      color: const Color(0xFF1B3A6B).withValues(alpha: 0.06),
+      blurRadius: 18,
+      offset: const Offset(0, 8),
+    ),
+  ];
+
   // Severity / match colours.
   static const Color high = Color(0xFFE4504D);
   static const Color medium = Color(0xFFE8A33D);
