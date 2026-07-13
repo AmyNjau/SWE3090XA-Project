@@ -76,6 +76,8 @@
   tr:last-child td{border-bottom:none;}
   .ok{color:var(--green);font-weight:700;}
   .tag{display:inline-block;font-size:12px;font-weight:700;padding:2px 8px;border-radius:6px;background:#e9f7ee;color:var(--green);}
+  .tag.get{background:#eef4ff;color:var(--blue);} .tag.post{background:#e9f7ee;color:var(--green);}
+  .mono{font-family:"Cascadia Code",Consolas,monospace;background:#eef4ff;color:#14315e;padding:2px 9px;border-radius:6px;font-size:14.5px;font-weight:600;}
 
   .stat-row{display:flex;gap:20px;flex-wrap:wrap;}
   .stat{flex:1;min-width:120px;background:linear-gradient(160deg,#fbfcff,#eef4ff);border:1px solid #dfe8fb;border-radius:14px;padding:18px 20px;}
@@ -202,7 +204,7 @@ const slides = [
         <h2>One smooth flow across five subsystems.</h2>
         <p>A cross-platform Flutter app backed by a Node.js/Express API that hosts an <b>explainable rule-based engine</b>, a swappable data layer, and server-side location lookup.</p>
         <div class="stat-row" style="margin-top:6px">
-          <div class="stat"><div class="n">14</div><div class="l">conditions in the knowledge base</div></div>
+          <div class="stat"><div class="n">15</div><div class="l">conditions · 35 symptoms</div></div>
           <div class="stat"><div class="n">9</div><div class="l">specialist types mapped</div></div>
           <div class="stat"><div class="n">15</div><div class="l">automated tests passing</div></div>
         </div>
@@ -214,7 +216,29 @@ const slides = [
   say:`This is your "here's the product" moment. <b>"I built a working cross-platform app on a real backend — not mock-ups. Fourteen conditions, nine specialists, fifteen automated tests passing."</b> Gesture to the phone: <b>"Clean tabbed home — Check, History, Profile — with the safety disclaimer visible at all times."</b>`,
   mark:`<b>Maximum-marks cue:</b> Emphasise <b>"swappable"</b> — local JSON and mock providers sit behind clean interfaces so Firestore and Google Maps drop in without touching the engine, route, or UI. That's the design-quality mark.`
 },
-/* 3 — OBJECTIVES */
+/* 3 — TECH STACK */
+{
+  html:`<div class="slide">
+    <div class="kicker">Technology stack · end to end</div>
+    <div class="body">
+      <h2 style="margin-bottom:16px">What it's built with — and why those choices.</h2>
+      <div class="cards" style="grid-template-columns:1fr 1fr 1fr;gap:14px">
+        <div class="card"><span class="ico">📱</span><h3>Presentation tier</h3>
+          <p><b>Flutter 3.10+ / Dart 3</b> · Material 3, Android-first.<br><b>http</b> (REST), <b>geolocator 11</b> (location), <b>url_launcher</b> (Maps hand-off).<br>Shared theme · typed models · lightweight in-app state store.</p></div>
+        <div class="card"><span class="ico">⚙️</span><h3>Application tier</h3>
+          <p><b>Node.js 18+ · Express 4.19</b> (CommonJS).<br><b>cors</b>, <b>dotenv</b>, custom validation + error middleware.<br>Pure rule engine · in-memory <b>TTL cache</b> for provider lookups.</p></div>
+        <div class="card"><span class="ico">🗄️</span><h3>Data &amp; external</h3>
+          <p>Local JSON store now → <b>Firebase Firestore-ready</b>.<br>Mock providers now → <b>Google Maps Platform</b> Nearby Search-ready.<br>Haversine distance util · anonymised query logs.</p></div>
+      </div>
+      <div class="pills" style="margin-top:16px">
+        <span class="pill">REST / JSON over HTTPS</span><span class="pill">Git &amp; GitHub</span><span class="pill">Postman</span><span class="pill">node:test runner</span><span class="pill">flutter_lints</span><span class="pill">Android emulator</span>
+      </div>
+    </div>
+  </div>`,
+  say:`Give a reason with every technology — don't just list. <b>"Flutter for one codebase across platforms; Node and Express because the API is just stateless JSON orchestration; and a rule engine rather than a heavy framework because the logic must stay transparent. The data and Maps layers are deliberately swappable — local JSON and mock providers today, Firestore and Google Maps behind the same interfaces tomorrow."</b>`,
+  mark:`<b>Maximum-marks cue:</b> Examiners reward <b>justified</b> tool choices over name-dropping. Pair each layer with its rationale, and stress <b>"the same REST/JSON contract binds all three tiers"</b> — that's the integration story your report is graded on.`
+},
+/* 4 — OBJECTIVES */
 {
   html:`<div class="slide">
     <div class="kicker">Objectives achieved through integration</div>
@@ -261,6 +285,38 @@ const slides = [
   </div>`,
   say:`This is a core technical slide — slow down. Trace the diagram with your finger: <b>"The Flutter client only ever speaks REST/JSON to the API. The API is the mediator — it calls the engine, the engine reads weighted rules from the data layer, and the API calls Maps server-side. Nothing on the right talks to anything on the left except through that one boundary."</b>`,
   mark:`<b>Maximum-marks cue:</b> Use the phrase <b>"loose coupling through a single mediating contract"</b> and note it gives the system a <b>microservice-leaning</b> character. Then justify it: "point-to-point coupling would mean every subsystem knows every other — this scales and tests far better."`
+},
+/* CODEBASE ANATOMY */
+{
+  html:`<div class="slide">
+    <div class="kicker">Codebase anatomy · the architecture, in folders</div>
+    <div class="body"><div class="cols">
+      <code><span class="c"># backend/  ~662 lines JS · layered</span>
+src/
+  routes/       <span class="c">// diagnose · providers · catalog</span>
+  services/     <span class="c">// engine · diagnosis · providers</span>
+  repositories/ <span class="c">// local | firestore  (swappable)</span>
+  middleware/   <span class="c">// validate · errorHandler</span>
+  data/         <span class="c">// knowledge_base, symptoms…</span>
+  config/       <span class="c">// one source of truth</span>
+  utils/        <span class="c">// haversine geo</span>
+
+<span class="c"># mobile/lib/  ~3,000 lines Dart</span>
+  screens/ (8)  widgets/ (9)
+  services/  models/  state/  theme/</code>
+      <div class="stack">
+        <h2 style="font-size:25px">Clean layers, real patterns.</h2>
+        <ul class="clean">
+          <li><b>Repository + factory</b> — swap JSON ⇄ Firestore with one config line; nothing else changes.</li>
+          <li><b>Service layer</b> — routes stay thin; orchestration lives in services.</li>
+          <li><b>Pure engine</b> — no I/O, so it's deterministic and trivially unit-testable.</li>
+          <li><b>Single-source config</b> — disclaimer &amp; tuning in one file, impossible to forget.</li>
+        </ul>
+      </div>
+    </div></div>
+  </div>`,
+  say:`Show that the diagram is real code, not aspiration. <b>"Every box on the previous slide is a folder here. Routes are thin; the real work is in services; and the repositories folder is where the swap lives — one line of config flips the whole app from local JSON to Firestore. The engine is a pure module with no I/O, which is exactly why I can test it exhaustively."</b>`,
+  mark:`<b>Maximum-marks cue:</b> Naming patterns precisely — <b>repository, factory, service layer, pure functions, single-source configuration</b> — is software-engineering vocabulary that lifts you into the top band. Say the folder <i>maps</i> to the architecture tier to prove design and implementation agree.`
 },
 /* 6 — DATA FLOW / SEQUENCE */
 {
@@ -380,6 +436,28 @@ const slides = [
   </div>`,
   say:`Prove there's real logic behind the UI. <b>"This is the actual JSON the API returned during today's run. The engine is a weighted scorer — it sums matched-symptom weights and normalises to a confidence. Because it's rule-based and deterministic, I can unit-test it exhaustively."</b>`,
   mark:`<b>Maximum-marks cue:</b> Pre-empt the obvious question — <b>"why not machine learning?"</b> Answer: <b>"With no clinically-validated training data, a transparent, auditable rule engine is the responsible choice — and it's explainable by construction."</b> Turning a limitation into a defensible decision scores heavily.`
+},
+/* API SURFACE */
+{
+  html:`<div class="slide">
+    <div class="kicker">The API surface · one REST contract</div>
+    <div class="body">
+      <h2 style="margin-bottom:14px">Five endpoints — the whole integration boundary.</h2>
+      <table>
+        <thead><tr><th>Method</th><th>Endpoint</th><th>Returns</th></tr></thead>
+        <tbody>
+          <tr><td><span class="tag get">GET</span></td><td><span class="mono">/api/health</span></td><td>Liveness + which data &amp; provider source is active.</td></tr>
+          <tr><td><span class="tag post">POST</span></td><td><span class="mono">/api/diagnose</span></td><td>Ranked conditions + recommended specialist + disclaimer.</td></tr>
+          <tr><td><span class="tag post">POST</span></td><td><span class="mono">/api/providers</span></td><td>Nearby providers for a specialist, ranked by distance.</td></tr>
+          <tr><td><span class="tag get">GET</span></td><td><span class="mono">/api/symptoms</span></td><td>The 35-symptom catalogue that populates the input screen.</td></tr>
+          <tr><td><span class="tag get">GET</span></td><td><span class="mono">/api/specialists</span></td><td>The 9-entry specialist directory.</td></tr>
+        </tbody>
+      </table>
+      <p class="muted" style="margin-top:14px;font-size:15px">JSON bodies · every request validated · stateless · CORS-enabled · errors returned as clean HTTP status codes.</p>
+    </div>
+  </div>`,
+  say:`Frame the table as the contract, not just a list. <b>"This is the entire boundary between my app and everything behind it — five endpoints. Two do the work, diagnose and providers; the GETs feed the UI. Every request is validated, every response is JSON, and the API is stateless — the client holds no server state."</b>`,
+  mark:`<b>Maximum-marks cue:</b> Call it <b>"the integration contract"</b> and tie it back to loose coupling: because this surface is small and stable, any subsystem behind it can change freely. A well-defined, validated API is precisely what a systems-integration examiner is looking for.`
 },
 /* 12 — DEMO STEP: PROVIDERS */
 {
