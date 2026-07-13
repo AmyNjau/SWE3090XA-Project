@@ -5,10 +5,16 @@ built-in **speaker script and scoring cues** on every slide.
 
 ## Open it
 
-Double-click `index.html` (opens in any browser). No internet or build step needed.
-Works on **desktop and phone** (fully responsive — tested at iPhone size).
-Present in **fullscreen** for best effect. To view on iPhone, open the `.html` in
-Safari (e.g. from Files / iCloud Drive); keep the `assets/` folder alongside it.
+**On a laptop:** double-click `index.html` (opens in any browser). Present in
+**fullscreen** for best effect.
+
+**On your iPhone:** use `Smart-Health-Presentation.html` — a single self-contained
+file (~2 MB) with every image embedded, so it works from any viewer with no
+`assets/` folder. Easiest path: email or AirDrop that one file to yourself, then
+open it (launches in Safari). Fully responsive — tested at iPhone size.
+
+> `index.html` is the editable source and references `./assets/`. After editing it,
+> regenerate the phone file with `python build-standalone.py`.
 
 ## Controls
 
