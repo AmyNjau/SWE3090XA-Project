@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Smart Health — Defence Presentation · Amy Njau · SWE3090XA</title>
+<style>
+  :root{
+    --navy:#14315e; --navy-2:#1e3a6e; --blue:#2563eb; --blue-soft:#eef4ff;
+    --ink:#0f172a; --muted:#5b6b82; --line:#e4eaf2; --bg:#f4f7fc;
+    --red:#e2483d; --amber:#f59e0b; --green:#16a34a;
+    --card:#ffffff; --radius:18px;
+    --shadow:0 18px 50px -18px rgba(20,49,94,.35);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:"Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg); color:var(--ink); overflow:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  /* ---------- Stage ---------- */
+  #stage{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:34px 56px 70px;}
+  .slide{
+    position:absolute;width:min(1180px,94vw);height:min(680px,82vh);
+    background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);
+    padding:52px 60px;opacity:0;transform:translateY(18px) scale(.985);
+    transition:opacity .45s ease,transform .45s ease;pointer-events:none;
+    display:flex;flex-direction:column;overflow:hidden;
+  }
+  .slide.active{opacity:1;transform:none;pointer-events:auto;z-index:2;}
+  .slide.prev{opacity:0;transform:translateY(-14px) scale(.985);}
+
+  /* ---------- Type ---------- */
+  .kicker{font-size:13px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--blue);margin-bottom:14px;display:flex;align-items:center;gap:10px;}
+  .kicker::before{content:"";width:26px;height:3px;border-radius:3px;background:var(--blue);}
+  h1{font-size:44px;line-height:1.08;letter-spacing:-.02em;margin-bottom:10px;}
+  h2{font-size:33px;line-height:1.12;letter-spacing:-.015em;margin-bottom:6px;}
+  h3{font-size:19px;line-height:1.25;}
+  p{font-size:17.5px;line-height:1.55;color:#26364d;}
+  .lede{font-size:20px;color:var(--muted);line-height:1.5;}
+  .muted{color:var(--muted);}
+  b,strong{color:var(--ink);font-weight:700;}
+
+  /* ---------- Layout helpers ---------- */
+  .body{flex:1;display:flex;flex-direction:column;justify-content:center;min-height:0;}
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:34px;align-items:center;height:100%;}
+  .cols.wide-right{grid-template-columns:.9fr 1.1fr;}
+  .cols.wide-left{grid-template-columns:1.15fr .85fr;}
+  .stack{display:flex;flex-direction:column;gap:14px;justify-content:center;}
+  ul.clean{list-style:none;display:flex;flex-direction:column;gap:13px;}
+  ul.clean li{position:relative;padding-left:30px;font-size:17.5px;line-height:1.45;color:#26364d;}
+  ul.clean li::before{content:"";position:absolute;left:0;top:8px;width:14px;height:14px;border-radius:5px;background:var(--blue-soft);border:2px solid var(--blue);}
+  ul.clean li b{color:var(--ink);}
+
+  .pills{display:flex;flex-wrap:wrap;gap:9px;margin-top:4px;}
+  .pill{background:var(--blue-soft);color:var(--navy);border:1px solid #d6e2fb;padding:7px 13px;border-radius:999px;font-size:14px;font-weight:600;}
+
+  /* device frame */
+  .device{position:relative;margin:0 auto;width:262px;border-radius:34px;padding:9px;background:linear-gradient(160deg,#22375f,#0f213f);box-shadow:0 26px 60px -20px rgba(15,33,63,.6);}
+  .device img{display:block;width:100%;border-radius:26px;}
+  .device.small{width:220px;}
+  .figframe{background:#fbfcfe;border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:0 10px 30px -18px rgba(20,49,94,.4);}
+  .figframe img{display:block;width:100%;border-radius:6px;}
+
+  .cards{display:grid;gap:14px;}
+  .card{background:#fbfcff;border:1px solid var(--line);border-radius:14px;padding:16px 18px;}
+  .card h3{margin-bottom:4px;}
+  .card p{font-size:15px;color:var(--muted);line-height:1.4;}
+  .card .ico{font-size:22px;margin-bottom:8px;display:block;}
+
+  table{width:100%;border-collapse:collapse;font-size:15.5px;}
+  th{text-align:left;font-size:12.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);padding:0 12px 10px;border-bottom:2px solid var(--line);}
+  td{padding:11px 12px;border-bottom:1px solid var(--line);color:#2a3a52;vertical-align:top;}
+  tr:last-child td{border-bottom:none;}
+  .ok{color:var(--green);font-weight:700;}
+  .tag{display:inline-block;font-size:12px;font-weight:700;padding:2px 8px;border-radius:6px;background:#e9f7ee;color:var(--green);}
+
+  .stat-row{display:flex;gap:20px;flex-wrap:wrap;}
+  .stat{flex:1;min-width:120px;background:linear-gradient(160deg,#fbfcff,#eef4ff);border:1px solid #dfe8fb;border-radius:14px;padding:18px 20px;}
+  .stat .n{font-size:38px;font-weight:800;color:var(--navy);letter-spacing:-.02em;line-height:1;}
+  .stat .l{font-size:14px;color:var(--muted);margin-top:6px;}
+
+  code{font-family:"Cascadia Code",Consolas,monospace;background:#0f213f;color:#d7e6ff;border-radius:12px;display:block;padding:18px 20px;font-size:14px;line-height:1.6;overflow:auto;}
+  code .k{color:#7cc4ff;} code .s{color:#8be2b0;} code .c{color:#6b84a8;}
+
+  /* ---------- Title slide ---------- */
+  .title-slide{background:linear-gradient(150deg,var(--navy) 0%,#1c3f78 55%,var(--blue) 130%);color:#fff;}
+  .title-slide .kicker{color:#9dc0ff;} .title-slide .kicker::before{background:#9dc0ff;}
+  .title-slide h1{font-size:52px;color:#fff;}
+  .title-slide p{color:#d6e2f7;}
+  .title-slide .meta{display:flex;gap:38px;flex-wrap:wrap;margin-top:26px;}
+  .title-slide .meta div{border-left:2px solid rgba(255,255,255,.3);padding-left:14px;}
+  .title-slide .meta .lbl{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#9dc0ff;}
+  .title-slide .meta .val{font-size:17px;font-weight:600;color:#fff;margin-top:2px;}
+  .badge-live{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);color:#eaf1ff;padding:8px 15px;border-radius:999px;font-size:13.5px;font-weight:600;}
+  .badge-live .dot{width:9px;height:9px;border-radius:50%;background:#4ade80;box-shadow:0 0 0 0 rgba(74,222,128,.7);animation:pulse 1.8s infinite;}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(74,222,128,.6)}70%{box-shadow:0 0 0 12px rgba(74,222,128,0)}100%{box-shadow:0 0 0 0 rgba(74,222,128,0)}}
+
+  /* section divider slide */
+  .divider{background:linear-gradient(150deg,var(--navy),#1f477f);color:#fff;justify-content:center;}
+  .divider .kicker{color:#9dc0ff}.divider .kicker::before{background:#9dc0ff}
+  .divider h1{color:#fff;font-size:46px;}
+  .divider p{color:#cddcf5;max-width:640px;}
+  .divider .num{font-size:120px;font-weight:800;color:rgba(255,255,255,.12);position:absolute;top:24px;right:48px;line-height:1;}
+
+  /* speaker notes */
+  #notes{position:fixed;left:0;right:0;bottom:0;z-index:40;background:#0f213f;color:#dbe6f7;
+    border-top:3px solid var(--blue);padding:16px 26px 18px;transform:translateY(102%);transition:transform .3s ease;max-height:44vh;overflow:auto;}
+  #notes.show{transform:none;}
+  #notes h4{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#7cc4ff;margin-bottom:8px;display:flex;align-items:center;gap:8px;}
+  #notes .say{font-size:16.5px;line-height:1.6;color:#eaf1ff;}
+  #notes .say b{color:#fff;}
+  #notes .mark{margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,.14);font-size:14.5px;color:#a9c4ea;}
+  #notes .mark b{color:#ffd66b;}
+
+  /* chrome */
+  #bar{position:fixed;top:0;left:0;height:4px;background:linear-gradient(90deg,var(--blue),#60a5fa);z-index:50;transition:width .4s ease;}
+  #hud{position:fixed;bottom:16px;right:22px;z-index:45;display:flex;align-items:center;gap:14px;font-size:13px;color:var(--muted);}
+  #hud .btns{display:flex;gap:6px;}
+  #hud button{border:1px solid var(--line);background:#fff;color:var(--navy);width:34px;height:34px;border-radius:9px;font-size:15px;cursor:pointer;box-shadow:0 4px 12px -6px rgba(20,49,94,.4);}
+  #hud button:hover{background:var(--blue-soft);}
+  #hud .count{font-variant-numeric:tabular-nums;font-weight:600;color:var(--navy);}
+  #hint{position:fixed;bottom:18px;left:22px;z-index:45;font-size:12.5px;color:var(--muted);}
+  #hint kbd{background:#fff;border:1px solid var(--line);border-bottom-width:2px;border-radius:6px;padding:1px 7px;font-family:inherit;font-size:12px;color:var(--navy);}
+  .foot{position:absolute;bottom:18px;left:60px;font-size:12.5px;color:#9fb0c6;letter-spacing:.02em;}
+  .foot b{color:var(--navy);}
+</style>
+</head>
+<body>
+<div id="bar"></div>
+<div id="stage"></div>
+
+<div id="notes">
+  <h4>🎤 Presenter script &amp; scoring cues <span style="color:#6b84a8;font-weight:500;text-transform:none;letter-spacing:0">— press <b style="color:#7cc4ff">S</b> to hide</span></h4>
+  <div class="say" id="note-say"></div>
+  <div class="mark" id="note-mark"></div>
+</div>
+
+<div id="hud">
+  <span class="count"><span id="cur">1</span> / <span id="tot">0</span></span>
+  <div class="btns">
+    <button id="prev" title="Previous (←)">‹</button>
+    <button id="next" title="Next (→)">›</button>
+  </div>
+</div>
+<div id="hint"><kbd>←</kbd> <kbd>→</kbd> navigate &nbsp;·&nbsp; <kbd>S</kbd> speaker notes &nbsp;·&nbsp; <kbd>F</kbd> fullscreen</div>
+
+<script>
+const A = "./assets/";
+const slides = [
+/* 0 — TITLE */
+{
+  html:`<div class="slide title-slide">
+    <div class="body">
+      <div class="kicker">USIU-Africa · SWE3090XA — Software Engineering Final Project</div>
+      <h1>Smart Health</h1>
+      <p class="lede" style="color:#e6eefb;max-width:720px">A symptom checker &amp; doctor-recommendation system that turns how you feel into a ranked, <b style="color:#fff">explainable</b> shortlist of conditions, the right specialist, and nearby care.</p>
+      <div class="meta">
+        <div><div class="lbl">Presented by</div><div class="val">Amy Wanjugu Njau · ID 669008</div></div>
+        <div><div class="lbl">Supervisor</div><div class="val">Mr Fredrick Ogore</div></div>
+        <div><div class="lbl">Deliverable</div><div class="val">System Integration Report + Live Build</div></div>
+      </div>
+      <div style="margin-top:28px"><span class="badge-live"><span class="dot"></span> Live demo running — backend + Android app up now</span></div>
+    </div>
+  </div>`,
+  say:`Open with confidence and eye contact. <b>"Good morning. I'm Amy Njau, and this is Smart Health — a mobile symptom checker that gives people a ranked, explainable shortlist of likely conditions, points them to the right specialist, and finds nearby care."</b> Then set expectations: <b>"I'll walk through the problem, the architecture, show it running live on the emulator, and cover my testing and results."</b>`,
+  mark:`<b>Maximum-marks cue:</b> Say the words the rubric rewards in the first 30 seconds — <b>"integration", "explainable", "layered architecture", "tested end-to-end"</b>. Point at the green "live demo running" badge so the panel knows this is a working build, not slideware.`
+},
+/* 1 — PROBLEM */
+{
+  html:`<div class="slide">
+    <div class="kicker">The problem</div>
+    <div class="body"><div class="cols">
+      <div class="stack">
+        <h2>People self-diagnose in the dark.</h2>
+        <p>When symptoms appear, most people either panic-search the web and get a wall of unranked, unexplained results — or delay care and see the wrong specialist.</p>
+        <ul class="clean">
+          <li><b>No ranking</b> — everything looks equally scary.</li>
+          <li><b>No reasoning</b> — you can't see <i>why</i> a result was suggested.</li>
+          <li><b>No next step</b> — which specialist? which nearby clinic?</li>
+        </ul>
+      </div>
+      <div class="cards">
+        <div class="card"><span class="ico">🔎</span><h3>Symptom → probable condition</h3><p>Ranked by how closely it matches what you actually reported.</p></div>
+        <div class="card"><span class="ico">👩‍⚕️</span><h3>Condition → right specialist</h3><p>The correct point of contact, not a guess.</p></div>
+        <div class="card"><span class="ico">📍</span><h3>Specialist → nearby care</h3><p>Reachable providers, sorted by distance.</p></div>
+      </div>
+    </div></div>
+    <div class="foot"><b>Smart Health</b> · guidance tool, not a medical device</div>
+  </div>`,
+  say:`Frame the pain before the solution. <b>"When something feels wrong, people search the internet and get a wall of results that are unranked, unexplained, and give no next step."</b> Then land the three-step promise on the right: <b>"Smart Health closes that loop — symptom to condition, condition to specialist, specialist to a clinic you can actually reach."</b>`,
+  mark:`<b>Maximum-marks cue:</b> Name your scope boundary out loud — <b>"a guidance tool, not a medical device, on an educational knowledge base."</b> Examiners reward a candidate who states limitations before being asked.`
+},
+/* 2 — SOLUTION / WHAT I BUILT */
+{
+  html:`<div class="slide">
+    <div class="kicker">What I built</div>
+    <div class="body"><div class="cols wide-right">
+      <div class="stack">
+        <h2>One smooth flow across five subsystems.</h2>
+        <p>A cross-platform Flutter app backed by a Node.js/Express API that hosts an <b>explainable rule-based engine</b>, a swappable data layer, and server-side location lookup.</p>
+        <div class="stat-row" style="margin-top:6px">
+          <div class="stat"><div class="n">14</div><div class="l">conditions in the knowledge base</div></div>
+          <div class="stat"><div class="n">9</div><div class="l">specialist types mapped</div></div>
+          <div class="stat"><div class="n">15</div><div class="l">automated tests passing</div></div>
+        </div>
+        <div class="pills"><span class="pill">Flutter / Dart</span><span class="pill">Node.js + Express</span><span class="pill">REST / JSON over HTTPS</span><span class="pill">Firestore-ready</span><span class="pill">Maps-ready</span></div>
+      </div>
+      <div class="device"><img src="${A}app_home.png" alt="Smart Health home dashboard"/></div>
+    </div></div>
+  </div>`,
+  say:`This is your "here's the product" moment. <b>"I built a working cross-platform app on a real backend — not mock-ups. Fourteen conditions, nine specialists, fifteen automated tests passing."</b> Gesture to the phone: <b>"Clean tabbed home — Check, History, Profile — with the safety disclaimer visible at all times."</b>`,
+  mark:`<b>Maximum-marks cue:</b> Emphasise <b>"swappable"</b> — local JSON and mock providers sit behind clean interfaces so Firestore and Google Maps drop in without touching the engine, route, or UI. That's the design-quality mark.`
+},
+/* 3 — OBJECTIVES */
+{
+  html:`<div class="slide">
+    <div class="kicker">Objectives achieved through integration</div>
+    <div class="body">
+      <h2 style="margin-bottom:22px">What the integration set out to prove.</h2>
+      <div class="cards" style="grid-template-columns:1fr 1fr;gap:16px">
+        <div class="card"><span class="ico">🔗</span><h3>One end-to-end workflow</h3><p>Symptom input → diagnosis → specialist → nearby-provider lookup, with no manual hand-offs.</p></div>
+        <div class="card"><span class="ico">📦</span><h3>Consistent, typed data exchange</h3><p>A single API contract keeps client, server and database on the same well-typed data.</p></div>
+        <div class="card"><span class="ico">🛰️</span><h3>Isolated external services</h3><p>Reliable use of location data while the rest of the system is shielded from the Maps provider.</p></div>
+        <div class="card"><span class="ico">🛟</span><h3>Graceful degradation</h3><p>One component failing — e.g. denied location — never breaks the whole experience.</p></div>
+      </div>
+    </div>
+  </div>`,
+  say:`Keep this crisp — read the four headers, expand only the last one. <b>"The objective I'm proudest of is graceful degradation: if the user denies location, the app doesn't crash or dead-end — it continues with condition and specialist guidance."</b>`,
+  mark:`<b>Maximum-marks cue:</b> These four map directly to your report's Section 1.3. Saying <b>"these were my stated integration objectives, and I'll show each one working"</b> tells the panel you delivered against your own spec — a completeness mark.`
+},
+/* 4 — DIVIDER: ARCHITECTURE */
+{
+  html:`<div class="slide divider">
+    <div class="num">01</div>
+    <div class="kicker">Section</div>
+    <h1>Architecture &amp; integration</h1>
+    <p class="lede" style="color:#cddcf5">How five independent subsystems become one coherent system — through a single API boundary.</p>
+  </div>`,
+  say:`A breath between "what" and "how". <b>"Now the engineering — how these pieces actually fit together."</b> Short pause, then advance.`,
+  mark:`<b>Maximum-marks cue:</b> Section dividers keep a viva structured. Panels grade clarity of communication — signposting where you are earns easy marks.`
+},
+/* 5 — ARCHITECTURE FIG */
+{
+  html:`<div class="slide">
+    <div class="kicker">Integration architecture · API-based, layered</div>
+    <div class="body"><div class="cols wide-right">
+      <div class="stack">
+        <h2 style="font-size:28px">The API is the single integration point.</h2>
+        <ul class="clean">
+          <li>The app <b>never</b> touches the database or Maps directly — everything passes through the Express API.</li>
+          <li>Subsystems are <b>loosely coupled</b>: any one can change internally as long as the JSON contract holds.</li>
+          <li>The engine and provider service are <b>independent, replaceable modules</b> behind that API.</li>
+        </ul>
+        <div class="pills"><span class="pill">Presentation tier</span><span class="pill">Application tier</span><span class="pill">Data &amp; external tier</span></div>
+      </div>
+      <div class="figframe"><img src="${A}fig_architecture.png" alt="Integration architecture diagram"/></div>
+    </div></div>
+  </div>`,
+  say:`This is a core technical slide — slow down. Trace the diagram with your finger: <b>"The Flutter client only ever speaks REST/JSON to the API. The API is the mediator — it calls the engine, the engine reads weighted rules from the data layer, and the API calls Maps server-side. Nothing on the right talks to anything on the left except through that one boundary."</b>`,
+  mark:`<b>Maximum-marks cue:</b> Use the phrase <b>"loose coupling through a single mediating contract"</b> and note it gives the system a <b>microservice-leaning</b> character. Then justify it: "point-to-point coupling would mean every subsystem knows every other — this scales and tests far better."`
+},
+/* 6 — DATA FLOW / SEQUENCE */
+{
+  html:`<div class="slide">
+    <div class="kicker">End-to-end data flow</div>
+    <div class="body"><div class="cols wide-left">
+      <div class="figframe"><img src="${A}fig_sequence.png" alt="End-to-end sequence diagram"/></div>
+      <div class="stack">
+        <h2 style="font-size:26px">A defined request/response sequence.</h2>
+        <ul class="clean">
+          <li>Client sends <b>symptoms</b> → API invokes the engine.</li>
+          <li>Engine reads weighted rules → returns <b>ranked conditions + specialist</b>.</li>
+          <li>Client sends <b>coordinates + specialist</b> → API queries Maps → <b>ranked providers</b>.</li>
+          <li>Each query/result can be <b>logged</b> for analytics.</li>
+        </ul>
+        <p class="muted" style="font-size:15px">REST over HTTPS · JSON · stateless request/response.</p>
+      </div>
+    </div></div>
+  </div>`,
+  say:`Walk the sequence top to bottom once. <b>"Two round-trips, both stateless: first symptoms in, ranked conditions and a specialist out; then coordinates and that specialist in, nearby providers out."</b> Mention the log step: <b>"Every query can be persisted, which is what makes analytics and future improvement possible."</b>`,
+  mark:`<b>Maximum-marks cue:</b> Say <b>"stateless"</b> and explain why it matters — it's what lets you scale the API horizontally behind a load balancer later (ties to your Recommendations section). Connecting a design choice to a future benefit is a distinction-level move.`
+},
+/* 7 — SECURITY */
+{
+  html:`<div class="slide">
+    <div class="kicker">Security &amp; safety by design</div>
+    <div class="body">
+      <h2 style="margin-bottom:20px">Trust is engineered in, not bolted on.</h2>
+      <div class="cards" style="grid-template-columns:1fr 1fr 1fr;gap:14px">
+        <div class="card"><span class="ico">🔒</span><h3>Encrypted in transit</h3><p>All client–API and API–Maps traffic runs over HTTPS.</p></div>
+        <div class="card"><span class="ico">🔑</span><h3>Server-side key</h3><p>The Maps key lives in server env vars — never shipped to the client.</p></div>
+        <div class="card"><span class="ico">✅</span><h3>Validated input</h3><p>Requests are validated before processing; empty payloads rejected cleanly.</p></div>
+        <div class="card"><span class="ico">📍</span><h3>Permissioned location</h3><p>Location access is gated by explicit user consent.</p></div>
+        <div class="card"><span class="ico">🗂️</span><h3>Data minimisation</h3><p>Persisted user data kept to a minimum by design.</p></div>
+        <div class="card"><span class="ico">⚠️</span><h3>Always-on disclaimer</h3><p>"Guidance only" banner is present on every results view.</p></div>
+      </div>
+    </div>
+  </div>`,
+  say:`Don't read all six — pick the two that show judgement. <b>"The Google Maps key never leaves the server; the client can't leak what it never holds. And input is validated up front, so an empty symptom list returns a clean 400, not a crash."</b>`,
+  mark:`<b>Maximum-marks cue:</b> Security is where average projects go silent. Volunteering <b>"encryption in transit, server-side secrets, input validation, consent-gated location, data minimisation"</b> unprompted signals professional maturity — reserved for top bands.`
+},
+/* 8 — DIVIDER: DEMO */
+{
+  html:`<div class="slide divider">
+    <div class="num">02</div>
+    <div class="kicker">Section · switch to the emulator</div>
+    <h1>Live demonstration</h1>
+    <p class="lede" style="color:#cddcf5">Fever + Headache + Chills → <b style="color:#fff">Malaria 55%</b> → General Physician → nearby clinics → directions.</p>
+  </div>`,
+  say:`<b>This is the mark-winner — switch to the actual emulator here, not the screenshots.</b> Keep the backend window visible so the panel sees the request hit the rule engine live. Narrate as you tap: <b>"I'll pick Fever, Headache and Chills, and analyse."</b>`,
+  mark:`<b>Maximum-marks cue:</b> Rehearse this until it's muscle memory. A confident 90-second live run beats any slide. Backup screenshots follow in case Wi-Fi or the emulator misbehaves — but lead with the real thing.`
+},
+/* 9 — DEMO STEP: CHECK */
+{
+  html:`<div class="slide">
+    <div class="kicker">Demo · Step 1 — report symptoms</div>
+    <div class="body"><div class="cols">
+      <div class="stack">
+        <h2>Pick what you feel.</h2>
+        <p>Searchable, categorised symptom chips. I'll select <b>Fever</b>, <b>Headache</b> and <b>Chills</b> — then <b>Analyse</b>.</p>
+        <ul class="clean">
+          <li>A clear <b>3-step progress indicator</b>: Symptoms → Conditions → Providers.</li>
+          <li>Nothing is submitted until the user chooses — input stays in their control.</li>
+        </ul>
+      </div>
+      <div class="device"><img src="${A}app_check.png" alt="Symptom selection screen"/></div>
+    </div></div>
+  </div>`,
+  say:`If the live demo is running, this slide is just your safety net — glance, don't dwell. <b>"Symptoms are categorised and searchable; the stepper at the top shows exactly where you are in the flow."</b>`,
+  mark:`<b>Maximum-marks cue:</b> Point out the <b>step indicator</b> — it shows you thought about user orientation and UX, not just function. Small deliberate UX choices read as design maturity.`
+},
+/* 10 — DEMO STEP: RESULTS (hero) */
+{
+  html:`<div class="slide">
+    <div class="kicker">Demo · Step 2 — ranked, explainable conditions</div>
+    <div class="body"><div class="cols">
+      <div class="device"><img src="${A}app_results.png" alt="Ranked conditions with explainability"/></div>
+      <div class="stack">
+        <h2>Not just <i>what</i> — <i>why</i>.</h2>
+        <p>Conditions are ranked by weighted match. The top result shows a <b>confidence bar</b> and — critically — <b>"Why this match"</b> chips naming the exact symptoms that drove it.</p>
+        <ul class="clean">
+          <li><b>Malaria 55%</b> — high match, seek care promptly.</li>
+          <li>Recommended specialist surfaced inline: <b>General Physician</b>.</li>
+          <li>Colour-coded severity; runner-ups (Flu 43%, Typhoid 37%) shown honestly.</li>
+        </ul>
+      </div>
+    </div></div>
+  </div>`,
+  say:`<b>Slow right down — this is the intellectual heart of the project.</b> <b>"Most symptom checkers are black boxes. Mine is explainable: it doesn't just say Malaria 55% — it shows the chips Fever, Headache, Chills that produced that score. A user, and an examiner, can audit the reasoning."</b>`,
+  mark:`<b>Maximum-marks cue:</b> Land the word <b>"explainable"</b> hard and tie it to trust and safety. Then show honesty: <b>"It presents alternatives — Flu and Typhoid — rather than a single overconfident answer."</b> That combination of explainability + calibrated humility is your standout contribution.`
+},
+/* 11 — HOW THE ENGINE SCORES */
+{
+  html:`<div class="slide">
+    <div class="kicker">Under the hood · the rule engine</div>
+    <div class="body"><div class="cols wide-left">
+      <div class="stack">
+        <h2 style="font-size:27px">Weighted scoring, fully transparent.</h2>
+        <p>Each condition holds weighted symptom rules. The engine sums the weights of matched symptoms, normalises to a confidence %, ranks, and maps the top condition to a specialist.</p>
+        <ul class="clean">
+          <li><b>Deterministic</b> — same input, same output, every time. Easy to test.</li>
+          <li><b>Auditable</b> — the matched symptoms <i>are</i> the explanation.</li>
+          <li><b>Swappable knowledge base</b> — rules live in data, not code.</li>
+        </ul>
+      </div>
+      <code><span class="c">// POST /api/diagnose  → live response just now</span>
+{
+  <span class="k">"results"</span>: [
+    { <span class="k">"name"</span>:<span class="s">"Malaria"</span>, <span class="k">"confidence"</span>:55,
+      <span class="k">"specialist"</span>:<span class="s">"General Physician"</span>,
+      <span class="k">"matchedSymptoms"</span>:[<span class="s">"fever"</span>,<span class="s">"headache"</span>,<span class="s">"chills"</span>] },
+    { <span class="k">"name"</span>:<span class="s">"Influenza (Flu)"</span>, <span class="k">"confidence"</span>:43.2 },
+    { <span class="k">"name"</span>:<span class="s">"Typhoid Fever"</span>, <span class="k">"confidence"</span>:37.1 }
+  ]
+}</code>
+    </div></div>
+  </div>`,
+  say:`Prove there's real logic behind the UI. <b>"This is the actual JSON the API returned during today's run. The engine is a weighted scorer — it sums matched-symptom weights and normalises to a confidence. Because it's rule-based and deterministic, I can unit-test it exhaustively."</b>`,
+  mark:`<b>Maximum-marks cue:</b> Pre-empt the obvious question — <b>"why not machine learning?"</b> Answer: <b>"With no clinically-validated training data, a transparent, auditable rule engine is the responsible choice — and it's explainable by construction."</b> Turning a limitation into a defensible decision scores heavily.`
+},
+/* 12 — DEMO STEP: PROVIDERS */
+{
+  html:`<div class="slide">
+    <div class="kicker">Demo · Step 3 — nearby care + resilience</div>
+    <div class="body"><div class="cols">
+      <div class="stack">
+        <h2>From diagnosis to a door you can walk through.</h2>
+        <p>The specialist type + the user's coordinates go back to the API, which returns providers ranked by distance — each with a one-tap <b>Directions</b> hand-off to Google Maps.</p>
+        <ul class="clean">
+          <li>Map preview + rated, sorted list (4.6★, 4.7★ …).</li>
+          <li><b>Graceful degradation in action:</b> location denied → "using a default location" banner, flow continues.</li>
+        </ul>
+      </div>
+      <div class="device"><img src="${A}app_providers.png" alt="Nearby providers with directions"/></div>
+    </div></div>
+  </div>`,
+  say:`Close the loop. <b>"The specialist and the user's location go back to the API, which returns nearby providers sorted by distance, each with one-tap directions."</b> Then demonstrate resilience deliberately: <b>"Notice the banner — I've left location on default here, and the app tells the user honestly rather than failing."</b>`,
+  mark:`<b>Maximum-marks cue:</b> This slide <i>shows</i> the graceful-degradation objective you promised on the Objectives slide — call that back explicitly: <b>"this is objective four, working."</b> Closing your own loops is what pushes a good grade to a top grade.`
+},
+/* 13 — DIVIDER: EVIDENCE */
+{
+  html:`<div class="slide divider">
+    <div class="num">03</div>
+    <div class="kicker">Section</div>
+    <h1>Testing, data &amp; results</h1>
+    <p class="lede" style="color:#cddcf5">Evidence that it works — and that it fails safely.</p>
+  </div>`,
+  say:`<b>"Anyone can demo a happy path — let me show you how I verified it."</b> This is where you separate yourself from projects that only ever ran once.`,
+  mark:`<b>Maximum-marks cue:</b> Testing & validation is a heavily-weighted rubric section and the one students most often rush. Give it real airtime and specific numbers.`
+},
+/* 14 — TESTING */
+{
+  html:`<div class="slide">
+    <div class="kicker">Testing &amp; validation · three levels</div>
+    <div class="body"><div class="cols wide-left">
+      <div>
+        <table>
+          <thead><tr><th>#</th><th>Test case</th><th>Result</th></tr></thead>
+          <tbody>
+            <tr><td>T1</td><td>Valid symptoms → /diagnose</td><td><span class="ok">Pass</span></td></tr>
+            <tr><td>T2</td><td>Empty symptom list → 400 + message</td><td><span class="ok">Pass</span></td></tr>
+            <tr><td>T3</td><td>Providers for valid coordinates</td><td><span class="ok">Pass</span></td></tr>
+            <tr><td>T4</td><td>Location permission denied</td><td><span class="ok">Pass</span></td></tr>
+            <tr><td>T5</td><td>Client network failure → retry, no crash</td><td><span class="ok">Pass</span></td></tr>
+            <tr><td>T6</td><td>End-to-end: symptoms→conditions→providers</td><td><span class="ok">Pass</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="stack">
+        <h3 style="color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-size:13px">Validation pyramid</h3>
+        <div class="card"><h3>Unit</h3><p>Engine scoring &amp; ranking on known symptom sets.</p></div>
+        <div class="card"><h3>Integration</h3><p>API + engine + data + Maps working as a whole.</p></div>
+        <div class="card"><h3>User acceptance</h3><p>End-to-end clarity, correctness &amp; error handling.</p></div>
+        <p class="muted" style="font-size:14px"><b>15 automated backend tests</b> + Flutter widget/model tests, all green.</p>
+      </div>
+    </div></div>
+  </div>`,
+  say:`Point to T2, T4 and T5 specifically. <b>"I didn't only test that it works — I tested that it fails safely: empty input returns a clear 400, denied location keeps the flow alive, a dropped network shows a retry instead of a crash. Three levels: unit, integration, and user-acceptance."</b>`,
+  mark:`<b>Maximum-marks cue:</b> Emphasise <b>negative and edge-case testing</b> — examiners look for it and rarely find it. Quote the number: <b>"fifteen automated tests, all passing,"</b> then be honest about the gap: <b>"the next step is a continuous regression suite."</b>`
+},
+/* 15 — ER / DATA MODEL */
+{
+  html:`<div class="slide">
+    <div class="kicker">Data model · Appendix A</div>
+    <div class="body"><div class="cols">
+      <div class="figframe"><img src="${A}fig_erd.png" alt="Entity relationship diagram"/></div>
+      <div class="stack">
+        <h2 style="font-size:26px">Seven entities, one source of truth.</h2>
+        <ul class="clean">
+          <li><b>User</b> initiates many <b>Queries</b> (1–M).</li>
+          <li><b>Symptom ↔ Condition</b> is many-to-many, resolved by the associative <b>Condition_Symptom</b> that carries the <b>rule weight</b>.</li>
+          <li>Each <b>Condition</b> maps to one <b>Specialist</b>; <b>Providers</b> offer specialist types.</li>
+        </ul>
+        <p class="muted" style="font-size:15px">The weight on the associative entity <i>is</i> the engine's knowledge — data, not hard-coded logic.</p>
+      </div>
+    </div></div>
+  </div>`,
+  say:`Show you understand your own schema. <b>"The interesting entity is Condition_Symptom — the associative table that resolves the many-to-many between symptoms and conditions. It carries the weight, which means the engine's intelligence lives in data, not in code."</b>`,
+  mark:`<b>Maximum-marks cue:</b> Correctly naming the <b>associative/junction entity resolving an M–M relationship</b> is textbook database design language — say it precisely. It signals you can defend the data layer, not just draw it.`
+},
+/* 16 — CHALLENGES */
+{
+  html:`<div class="slide">
+    <div class="kicker">Challenges &amp; engineering decisions</div>
+    <div class="body">
+      <h2 style="margin-bottom:18px">Every constraint became a design choice.</h2>
+      <table>
+        <thead><tr><th>Challenge</th><th>Solution applied</th></tr></thead>
+        <tbody>
+          <tr><td>Google Maps cost &amp; rate limits</td><td>Server-side lookups, cached results, throttled query frequency.</td></tr>
+          <tr><td>Denied location permission</td><td>Caught on the client; flow continues on symptom/specialist guidance.</td></tr>
+          <tr><td>Client/server model drift</td><td>One shared JSON contract; typed model classes mapped directly to it.</td></tr>
+          <tr><td>Protecting the Maps API key</td><td>All Maps calls moved server-side; key stored in environment variables.</td></tr>
+          <tr><td>Drive can't host build artefacts</td><td>Source on Drive; deps &amp; native build on local disk — reproducible setup scripts.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>`,
+  say:`Tell these as short stories, not a list. <b>"Maps calls cost money and leak keys, so I moved them server-side, cached, and throttled — one decision that solved cost, rate-limits and security at once."</b> Pick one more and move on.`,
+  mark:`<b>Maximum-marks cue:</b> This is the slide that proves the work was <i>yours</i> and hard-won. Panels love a candidate who can narrate a real obstacle and the reasoning behind the fix — it's authenticity plus problem-solving in one.`
+},
+/* 17 — OUTCOMES + HISTORY/PROFILE */
+{
+  html:`<div class="slide">
+    <div class="kicker">Outcomes &amp; benefits</div>
+    <div class="body"><div class="cols wide-left">
+      <div class="stack">
+        <h2 style="font-size:27px">The integration is invisible — and that's the win.</h2>
+        <ul class="clean">
+          <li><b>Efficiency:</b> one flow replaces several disconnected steps.</li>
+          <li><b>Consistency:</b> a shared contract + single knowledge base = one source of truth.</li>
+          <li><b>Experience:</b> history (the Query entity) and a profile (the User entity) make it feel like one app, not five services.</li>
+        </ul>
+      </div>
+      <div style="display:flex;gap:18px;justify-content:center">
+        <div class="device small"><img src="${A}app_history.png" alt="History"/></div>
+        <div class="device small"><img src="${A}app_profile.png" alt="Profile"/></div>
+      </div>
+    </div></div>
+  </div>`,
+  say:`Tie the abstract benefit to something on screen. <b>"The best measure of good integration is that the user never sees it — they experience one app. History and Profile aren't decoration; they're the Query and User entities from my ER model, made visible."</b>`,
+  mark:`<b>Maximum-marks cue:</b> Explicitly connect the UI back to the data model (History = Query, Profile = User). Showing the same concept traced from ERD → API → screen demonstrates <b>end-to-end coherence</b> — exactly what a system-integration report is graded on.`
+},
+/* 18 — RECOMMENDATIONS / FUTURE */
+{
+  html:`<div class="slide">
+    <div class="kicker">Recommendations · prototype → production</div>
+    <div class="body">
+      <h2 style="margin-bottom:20px">I know exactly what comes next.</h2>
+      <div class="cards" style="grid-template-columns:1fr 1fr 1fr;gap:14px">
+        <div class="card"><span class="ico">📈</span><h3>Scale</h3><p>Stateless API behind a load balancer; caching layer; optional message queue for async logging.</p></div>
+        <div class="card"><span class="ico">🩺</span><h3>Monitoring</h3><p>Central logging, health-check endpoints, alerting on errors &amp; Maps quota; CI/CD pipeline.</p></div>
+        <div class="card"><span class="ico">🌍</span><h3>Reach &amp; rigour</h3><p>Live Firestore + Maps keys, auth, multilingual + offline, and <b>clinical validation</b> of the knowledge base.</p></div>
+      </div>
+      <p class="muted" style="margin-top:18px;font-size:15.5px">The architecture was built for this: new subsystems drop in through the same single API boundary.</p>
+    </div>
+  </div>`,
+  say:`Show forward vision without over-claiming. <b>"This is a working prototype with a clear path to production: scale the stateless API horizontally, add monitoring and CI/CD, and — most importantly — clinically validate the knowledge base before any real-world use."</b>`,
+  mark:`<b>Maximum-marks cue:</b> Naming <b>clinical validation</b> as the gate before real use is the single most responsible thing you can say about a health app. It shows ethics and domain awareness — reserve it for here so it lands.`
+},
+/* 19 — CONCLUSION */
+{
+  html:`<div class="slide title-slide">
+    <div class="body">
+      <div class="kicker" style="color:#9dc0ff">In summary</div>
+      <h1 style="font-size:40px">Five subsystems, one coherent, tested, explainable system.</h1>
+      <ul class="clean" style="margin-top:14px">
+        <li style="color:#e6eefb"><b style="color:#fff">Built &amp; running</b> — Flutter app on a live Node/Express API, demoed end-to-end today.</li>
+        <li style="color:#e6eefb"><b style="color:#fff">Explainable &amp; safe</b> — every result is auditable; guidance-only by design.</li>
+        <li style="color:#e6eefb"><b style="color:#fff">Loosely coupled &amp; tested</b> — one API boundary, 15 passing tests, graceful failure.</li>
+      </ul>
+      <p class="lede" style="color:#cddcf5;margin-top:20px">"A sustainable, adaptable architecture — a working prototype with a credible road to a production-ready platform."</p>
+      <div style="margin-top:22px"><span class="badge-live"><span class="dot"></span> Thank you — I'd welcome your questions</span></div>
+    </div>
+  </div>`,
+  say:`Land it, then stop talking. <b>"To summarise: five subsystems integrated into one coherent, explainable and tested system — running live in front of you today, with a clear path to production. Thank you — I'd welcome your questions."</b> Then be quiet and hold eye contact.`,
+  mark:`<b>Maximum-marks cue:</b> A three-point close mirrors your objectives and gives the panel their marking summary in your words. Ending with a confident invitation to questions signals you're ready to defend it — not hoping to avoid it.`
+},
+/* 20 — Q&A PREP (for the student) */
+{
+  html:`<div class="slide">
+    <div class="kicker">Your defence sheet · anticipated questions</div>
+    <div class="body">
+      <h2 style="margin-bottom:16px">Have these answers loaded before you walk in.</h2>
+      <div class="cards" style="grid-template-columns:1fr 1fr;gap:13px">
+        <div class="card"><h3>"Why rules, not AI/ML?"</h3><p>No clinically-validated dataset; a transparent, deterministic, testable engine is the responsible choice and is explainable by construction.</p></div>
+        <div class="card"><h3>"How accurate is it?"</h3><p>Accuracy is bounded by rule coverage — it's an educational KB, not clinically validated. It's a triage guide, not a diagnosis. Next step: validate against medical references.</p></div>
+        <div class="card"><h3>"What if location is denied / offline?"</h3><p>Shown live: default-location banner, flow continues; network failure gives a retry, never a crash.</p></div>
+        <div class="card"><h3>"How does it scale?"</h3><p>Stateless API → horizontal scaling behind a load balancer; caching + optional queue for async logging.</p></div>
+        <div class="card"><h3>"Is it secure?"</h3><p>HTTPS throughout, server-side Maps key, validated input, consent-gated location, data minimisation.</p></div>
+        <div class="card"><h3>"Why mock Firestore &amp; Maps now?"</h3><p>Clean interfaces let real services drop in later without changing engine, route or UI — deliberate, not a shortcut.</p></div>
+      </div>
+    </div>
+  </div>`,
+  say:`<b>This slide is for you, not the panel — your rehearsal sheet.</b> Skip past it in the live talk (or keep it as a hidden backup). Know all six cold; they are the questions a software-engineering examiner will almost certainly ask.`,
+  mark:`<b>Maximum-marks cue:</b> The viva/Q&A is often 30–40% of the grade. A calm, specific answer to a hard question moves you up a band more than any slide. If you don't know something, say <b>"that's future work"</b> and point to your Recommendations — never bluff.`
+},
+];
+
+/* ---------- engine ---------- */
+const stage=document.getElementById('stage');
+const noteSay=document.getElementById('note-say');
+const noteMark=document.getElementById('note-mark');
+const notes=document.getElementById('notes');
+let i=0, notesOpen=true;
+slides.forEach((s,idx)=>{const w=document.createElement('div');w.innerHTML=s.html;const el=w.firstElementChild;el.dataset.idx=idx;stage.appendChild(el);});
+const els=[...stage.children];
+document.getElementById('tot').textContent=slides.length;
+
+function render(){
+  els.forEach((el,idx)=>{
+    el.classList.remove('active','prev');
+    if(idx===i)el.classList.add('active');
+    else if(idx<i)el.classList.add('prev');
+  });
+  document.getElementById('cur').textContent=i+1;
+  document.getElementById('bar').style.width=((i)/(slides.length-1)*100)+'%';
+  noteSay.innerHTML=slides[i].say||'';
+  noteMark.innerHTML=slides[i].mark||'';
+}
+function go(n){i=Math.max(0,Math.min(slides.length-1,n));render();}
+function next(){go(i+1);} function prev(){go(i-1);}
+
+document.getElementById('next').onclick=next;
+document.getElementById('prev').onclick=prev;
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'||e.key===' '||e.key==='PageDown'){e.preventDefault();next();}
+  else if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();prev();}
+  else if(e.key==='Home'){go(0);} else if(e.key==='End'){go(slides.length-1);}
+  else if(e.key==='s'||e.key==='S'){notesOpen=!notesOpen;notes.classList.toggle('show',notesOpen);}
+  else if(e.key==='f'||e.key==='F'){if(!document.fullscreenElement)document.documentElement.requestFullscreen();else document.exitFullscreen();}
+});
+stage.addEventListener('click',e=>{ if(e.target.closest('a'))return; const r=stage.getBoundingClientRect(); (e.clientX-r.left> r.width*0.5)?next():prev(); });
+
+notes.classList.add('show');
+render();
+</script>
+</body>
+</html>
