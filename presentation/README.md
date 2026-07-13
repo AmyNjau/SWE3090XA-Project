@@ -6,9 +6,13 @@ built-in **speaker script and scoring cues** on every slide.
 ## Open it
 
 Double-click `index.html` (opens in any browser). No internet or build step needed.
-Present in **fullscreen** for best effect.
+Works on **desktop and phone** (fully responsive — tested at iPhone size).
+Present in **fullscreen** for best effect. To view on iPhone, open the `.html` in
+Safari (e.g. from Files / iCloud Drive); keep the `assets/` folder alongside it.
 
 ## Controls
+
+**Desktop (keyboard/mouse)**
 
 | Key | Action |
 |-----|--------|
@@ -17,6 +21,16 @@ Present in **fullscreen** for best effect.
 | `S` | Toggle the speaker-notes panel (shown by default) |
 | `F` | Fullscreen |
 | `Home` / `End` | Jump to first / last slide |
+
+**Phone (touch)**
+
+| Gesture | Action |
+|---------|--------|
+| Swipe left / right | Next / previous slide |
+| `‹` `›` buttons (bottom bar) | Next / previous slide |
+| **📝 Notes** button (bottom bar) | Show/hide the speaker script (hidden by default on phones) |
+
+On phones each slide scrolls vertically if its content is taller than the screen.
 
 ## What's in the deck (21 slides)
 
