@@ -5,6 +5,20 @@ Symptom checker + doctor recommendation system. Three tiers: Flutter client
 Maps layer. See `README.md` for architecture and `LAUNCH.md` to run the demo.
 The defence deck lives in `presentation/`.
 
+**Read `PROJECT.md` first.** It holds the full rundown, the codebase map, the
+user's preferences verbatim, the changelog, and the roadmap.
+
+## The standing bar: attention to detail
+
+Be obsessed with attention to detail. Do everything to perfection, and make the
+review **thorough on every PR** — small ones included. The goal is a **fully
+secure, production-ready product**, so security work outranks new features.
+
+Verify claims against the running system, never against intent: UI change → look
+at it in a browser; API change → run the tests; a doc that describes behaviour →
+re-read it after the change and confirm every sentence is still true. Regenerate
+generated artifacts when their source changes.
+
 ## Milestone workflow (do this autonomously for every milestone)
 
 The user reviews after the fact on `main`. For each milestone:
@@ -13,6 +27,7 @@ The user reviews after the fact on `main`. For each milestone:
 3. Spawn my own sub-agent (Agent tool) to review the diff and give critical feedback.
 4. Address the feedback.
 5. Merge the PR to `main` and push.
+6. Update the changelog and roadmap in `PROJECT.md`.
 
 Remote: `origin` = github.com/AmyNjau/SWE3090XA-Project (`gh` authed as AmyNjau).
 

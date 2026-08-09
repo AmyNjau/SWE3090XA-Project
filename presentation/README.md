@@ -24,7 +24,7 @@ open it (launches in Safari). Fully responsive — tested at iPhone size.
 |-----|--------|
 | `→` / `Space` / click right | Next slide |
 | `←` / click left | Previous slide |
-| `S` | Toggle the speaker-notes panel (shown by default) |
+| `S` | Toggle the speaker-notes panel (hidden by default) |
 | `F` | Fullscreen |
 | `Home` / `End` | Jump to first / last slide |
 
@@ -34,17 +34,20 @@ open it (launches in Safari). Fully responsive — tested at iPhone size.
 |---------|--------|
 | Swipe left / right | Next / previous slide |
 | `‹` `›` buttons (bottom bar) | Next / previous slide |
-| **📝 Notes** button (bottom bar) | Show/hide the speaker script (hidden by default on phones) |
+| **📝 Notes** button (bottom bar) | Show/hide the speaker script (hidden by default) |
 
-On phones each slide scrolls vertically if its content is taller than the screen.
+Notes start hidden everywhere, so what the room sees is always a full, clean slide.
+With notes closed the deck fits without scrolling at every common laptop size
+(1280×720 through 1920×1080). Open the notes on a short screen, or view on a phone,
+and a dense slide scrolls vertically instead of being cut off.
 
-## What's in the deck (21 slides)
+## What's in the deck (24 slides)
 
-1. Title · 2. Problem · 3. What I built · 4. Objectives
-5–8. **Architecture** — API-based layered design, data flow, security
-9–13. **Live demo** — symptom check → Malaria 55% (explainable) → rule engine → providers
-14–16. **Evidence** — testing (T1–T6, 15 tests), ER model, challenges
-17–20. Outcomes · Recommendations · Conclusion · **your Q&A defence sheet**
+1. Title · 2. Problem · 3. What I built · 4. Tech stack · 5. Objectives
+6–10. **Architecture** — layered API design, codebase anatomy, data flow, security
+11–16. **Live demo** — symptom check → Malaria 55% (explainable) → rule engine → API → providers
+17–20. **Evidence** — testing (T1–T6, 15 tests), ER model, challenges
+21–24. Outcomes · Recommendations · Conclusion · **your Q&A defence sheet**
 
 Each slide's bottom panel has two things for you:
 - 🎤 **Presenter script** — what to say.

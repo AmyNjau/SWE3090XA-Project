@@ -46,7 +46,10 @@
 
   /* ---------- Layout helpers ---------- */
   .body{flex:1;display:flex;flex-direction:column;justify-content:center;min-height:0;}
-  .cols{display:grid;grid-template-columns:1fr 1fr;gap:34px;align-items:center;height:100%;}
+  /* min-height (not height): a column taller than the row must grow the grid,
+     not overflow it — overflow centred on a fixed-height row spills upward and
+     paints over the slide's kicker/heading. */
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:34px;align-items:center;min-height:100%;}
   .cols.wide-right{grid-template-columns:.9fr 1.1fr;}
   .cols.wide-left{grid-template-columns:1.15fr .85fr;}
   .cols>*{min-width:0;}
@@ -63,6 +66,18 @@
   .device{position:relative;margin:0 auto;width:262px;border-radius:34px;padding:9px;background:linear-gradient(160deg,#22375f,#0f213f);box-shadow:0 26px 60px -20px rgba(15,33,63,.6);}
   .device img{display:block;width:100%;border-radius:26px;}
   .device.small{width:220px;}
+  /* Screenshots are ~2.15:1 (562px tall at 262px wide), so on short laptop
+     screens a full-width mockup is taller than the slide. Size it from the
+     height actually left over instead, so no demo slide ever needs scrolling.
+     Desktop only — the phone breakpoints below set their own fixed widths. */
+  @media (min-width:821px){
+    .device{width:min(262px, calc((100vh - 235px) / 2.15));}
+    .device{width:min(262px, calc((100dvh - 235px) / 2.15));}
+    .device.small{width:min(220px, calc((100vh - 275px) / 2.15));}
+    .device.small{width:min(220px, calc((100dvh - 275px) / 2.15));}
+    body.notes-open .device{width:min(262px, calc((100dvh - var(--notes-h) - 235px) / 2.15));}
+    body.notes-open .device.small{width:min(220px, calc((100dvh - var(--notes-h) - 275px) / 2.15));}
+  }
   .figframe{background:#fbfcfe;border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:0 10px 30px -18px rgba(20,49,94,.4);}
   .figframe img{display:block;width:100%;border-radius:6px;}
 
