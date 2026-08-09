@@ -12,6 +12,10 @@
     --card:#ffffff; --radius:18px;
     --shadow:0 18px 50px -18px rgba(20,49,94,.35);
     --notes-h:34vh;
+    /* The slide's usable height. Kept in a variable because content that sizes
+       itself off the slide (the phone mockups) has to shrink in lockstep when the
+       speaker-notes panel eats into it. Mirrors .slide's height/max-height. */
+    --slide-h:min(680px, 82vh);
   }
   *{box-sizing:border-box;margin:0;padding:0}
   html,body{height:100%}
@@ -45,11 +49,16 @@
   b,strong{color:var(--ink);font-weight:700;}
 
   /* ---------- Layout helpers ---------- */
-  .body{flex:1;display:flex;flex-direction:column;justify-content:center;min-height:0;}
-  /* min-height (not height): a column taller than the row must grow the grid,
-     not overflow it — overflow centred on a fixed-height row spills upward and
-     paints over the slide's kicker/heading. */
-  .cols{display:grid;grid-template-columns:1fr 1fr;gap:34px;align-items:center;min-height:100%;}
+  /* "safe center" is the whole trick: plain centring makes content that is taller
+     than its box overflow BOTH ways, so the top spills upward over the kicker and
+     heading and cannot be scrolled to. Safe alignment falls back to start-alignment
+     the moment content would overflow, turning it into an honest downward scroll.
+     Browsers without it (Safari < 16.4) simply get today's plain centring. */
+  /* overflow-y on .body, not .slide: .body is the flex child that gets squeezed
+     when the slide is capped, so it is the box content actually spills out of.
+     Scrolling here is what makes that content reachable rather than silently cut. */
+  .body{flex:1;display:flex;flex-direction:column;justify-content:center;justify-content:safe center;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:34px;align-items:center;align-items:safe center;min-height:100%;}
   .cols.wide-right{grid-template-columns:.9fr 1.1fr;}
   .cols.wide-left{grid-template-columns:1.15fr .85fr;}
   .cols>*{min-width:0;}
@@ -66,18 +75,16 @@
   .device{position:relative;margin:0 auto;width:262px;border-radius:34px;padding:9px;background:linear-gradient(160deg,#22375f,#0f213f);box-shadow:0 26px 60px -20px rgba(15,33,63,.6);}
   .device img{display:block;width:100%;border-radius:26px;}
   .device.small{width:220px;}
-  /* Screenshots are ~2.15:1 (562px tall at 262px wide), so on short laptop
-     screens a full-width mockup is taller than the slide. Size it from the
-     height actually left over instead, so no demo slide ever needs scrolling.
-     Desktop only — the phone breakpoints below set their own fixed widths. */
-  @media (min-width:821px){
-    .device{width:min(262px, calc((100vh - 235px) / 2.15));}
-    .device{width:min(262px, calc((100dvh - 235px) / 2.15));}
-    .device.small{width:min(220px, calc((100vh - 275px) / 2.15));}
-    .device.small{width:min(220px, calc((100dvh - 275px) / 2.15));}
-    body.notes-open .device{width:min(262px, calc((100dvh - var(--notes-h) - 235px) / 2.15));}
-    body.notes-open .device.small{width:min(220px, calc((100dvh - var(--notes-h) - 275px) / 2.15));}
-  }
+  /* A framed mockup is ~2.15:1 overall (562px tall at 262px wide — that is the
+     frame including its 9px padding, not the 1080x2400 screenshot inside it), so
+     at full width it is taller than the slide can ever be. Size it from --slide-h
+     (the slide's own usable height, declared with .slide below) minus the padding
+     and heading above it, so it always fits instead of overflowing.
+     clamp() keeps a legible floor: better a slide that scrolls than a mockup too
+     small to read from the back of the room. Phones override this with the fixed
+     widths in the breakpoints further down. */
+  .device{width:clamp(180px, calc((var(--slide-h) - 150px) / 2.15), 262px);}
+  .device.small{width:clamp(150px, calc((var(--slide-h) - 190px) / 2.15), 220px);}
   .figframe{background:#fbfcfe;border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:0 10px 30px -18px rgba(20,49,94,.4);}
   .figframe img{display:block;width:100%;border-radius:6px;}
 
@@ -129,8 +136,13 @@
     border-top:3px solid var(--blue);padding:16px 26px 18px;transform:translateY(102%);transition:transform .3s ease;height:var(--notes-h);overflow:auto;}
   #notes.show{transform:none;}
   /* When notes are open, reserve space so the panel never overlaps slides or chrome. */
-  body.notes-open #stage{align-items:flex-start;padding-bottom:calc(var(--notes-h) + 26px);}
-  body.notes-open .slide{height:auto;max-height:calc(100vh - var(--notes-h) - 58px);max-height:calc(100dvh - var(--notes-h) - 58px);overflow-y:auto;-webkit-overflow-scrolling:touch;}
+  /* Reserve the notes panel's height PLUS the HUD lane above it (the same 70px of
+     bottom padding #stage uses when notes are closed), so neither the panel nor the
+     page counter/arrows can ever sit on top of slide text. */
+  body.notes-open #stage{align-items:flex-start;padding-bottom:calc(var(--notes-h) + 70px);}
+  body.notes-open{--slide-h:min(680px, 82vh, calc(100vh - var(--notes-h) - 104px));}
+  body.notes-open{--slide-h:min(680px, 82vh, calc(100dvh - var(--notes-h) - 104px));}
+  body.notes-open .slide{height:auto;max-height:calc(100vh - var(--notes-h) - 104px);max-height:calc(100dvh - var(--notes-h) - 104px);overflow-y:auto;-webkit-overflow-scrolling:touch;}
   body.notes-open #hud{bottom:calc(var(--notes-h) + 12px);}
   body.notes-open #hint{display:none;}
   #notes h4{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#7cc4ff;margin-bottom:8px;display:flex;align-items:center;gap:8px;}
@@ -214,7 +226,7 @@
 </div>
 
 <div id="hud">
-  <button id="notesBtn" title="Speaker notes (S)" aria-pressed="true">📝 Notes</button>
+  <button id="notesBtn" title="Speaker notes (S)" aria-pressed="false">📝 Notes</button>
   <span class="count"><span id="cur">1</span> / <span id="tot">0</span></span>
   <div class="btns">
     <button id="prev" title="Previous (←)">‹</button>
@@ -224,7 +236,6 @@
 <div id="hint"><kbd>←</kbd> <kbd>→</kbd> navigate &nbsp;·&nbsp; <kbd>S</kbd> speaker notes &nbsp;·&nbsp; <kbd>F</kbd> fullscreen</div>
 
 <script>
-const A = "./assets/";
 const slides = [
 /* 0 — TITLE */
 {
@@ -329,7 +340,7 @@ const slides = [
   say:`Keep this crisp — read the four headers, expand only the last one. <b>"The objective I'm proudest of is graceful degradation: if the user denies location, the app doesn't crash or dead-end — it continues with condition and specialist guidance."</b>`,
   mark:`<b>Maximum-marks cue:</b> These four map directly to your report's Section 1.3. Saying <b>"these were my stated integration objectives, and I'll show each one working"</b> tells the panel you delivered against your own spec — a completeness mark.`
 },
-/* 4 — DIVIDER: ARCHITECTURE */
+/* 5 — DIVIDER: ARCHITECTURE */
 {
   html:`<div class="slide divider">
     <div class="num">01</div>
@@ -340,7 +351,7 @@ const slides = [
   say:`A breath between "what" and "how". <b>"Now the engineering — how these pieces actually fit together."</b> Short pause, then advance.`,
   mark:`<b>Maximum-marks cue:</b> Section dividers keep a viva structured. Panels grade clarity of communication — signposting where you are earns easy marks.`
 },
-/* 5 — ARCHITECTURE FIG */
+/* 6 — ARCHITECTURE FIG */
 {
   html:`<div class="slide">
     <div class="kicker">Integration architecture · API-based, layered</div>
@@ -360,7 +371,7 @@ const slides = [
   say:`This is a core technical slide — slow down. Trace the diagram with your finger: <b>"The Flutter client only ever speaks REST/JSON to the API. The API is the mediator — it calls the engine, the engine reads weighted rules from the data layer, and the API calls Maps server-side. Nothing on the right talks to anything on the left except through that one boundary."</b>`,
   mark:`<b>Maximum-marks cue:</b> Use the phrase <b>"loose coupling through a single mediating contract"</b> and note it gives the system a <b>microservice-leaning</b> character. Then justify it: "point-to-point coupling would mean every subsystem knows every other — this scales and tests far better."`
 },
-/* CODEBASE ANATOMY */
+/* 7 — CODEBASE ANATOMY */
 {
   html:`<div class="slide">
     <div class="kicker">Codebase anatomy · the architecture, in folders</div>
@@ -392,7 +403,7 @@ src/
   say:`Show that the diagram is real code, not aspiration. <b>"Every box on the previous slide is a folder here. Routes are thin; the real work is in services; and the repositories folder is where the swap lives — one line of config flips the whole app from local JSON to Firestore. The engine is a pure module with no I/O, which is exactly why I can test it exhaustively."</b>`,
   mark:`<b>Maximum-marks cue:</b> Naming patterns precisely — <b>repository, factory, service layer, pure functions, single-source configuration</b> — is software-engineering vocabulary that lifts you into the top band. Say the folder <i>maps</i> to the architecture tier to prove design and implementation agree.`
 },
-/* 6 — DATA FLOW / SEQUENCE */
+/* 8 — DATA FLOW / SEQUENCE */
 {
   html:`<div class="slide">
     <div class="kicker">End-to-end data flow</div>
@@ -413,7 +424,7 @@ src/
   say:`Walk the sequence top to bottom once. <b>"Two round-trips, both stateless: first symptoms in, ranked conditions and a specialist out; then coordinates and that specialist in, nearby providers out."</b> Mention the log step: <b>"Every query can be persisted, which is what makes analytics and future improvement possible."</b>`,
   mark:`<b>Maximum-marks cue:</b> Say <b>"stateless"</b> and explain why it matters — it's what lets you scale the API horizontally behind a load balancer later (ties to your Recommendations section). Connecting a design choice to a future benefit is a distinction-level move.`
 },
-/* 7 — SECURITY */
+/* 9 — SECURITY */
 {
   html:`<div class="slide">
     <div class="kicker">Security &amp; safety by design</div>
@@ -432,7 +443,7 @@ src/
   say:`Don't read all six — pick the two that show judgement. <b>"The Google Maps key never leaves the server; the client can't leak what it never holds. And input is validated up front, so an empty symptom list returns a clean 400, not a crash."</b>`,
   mark:`<b>Maximum-marks cue:</b> Security is where average projects go silent. Volunteering <b>"encryption in transit, server-side secrets, input validation, consent-gated location, data minimisation"</b> unprompted signals professional maturity — reserved for top bands.`
 },
-/* 8 — DIVIDER: DEMO */
+/* 10 — DIVIDER: DEMO */
 {
   html:`<div class="slide divider">
     <div class="num">02</div>
@@ -443,7 +454,7 @@ src/
   say:`<b>This is the mark-winner — switch to the actual emulator here, not the screenshots.</b> Keep the backend window visible so the panel sees the request hit the rule engine live. Narrate as you tap: <b>"I'll pick Fever, Headache and Chills, and analyse."</b>`,
   mark:`<b>Maximum-marks cue:</b> Rehearse this until it's muscle memory. A confident 90-second live run beats any slide. Backup screenshots follow in case Wi-Fi or the emulator misbehaves — but lead with the real thing.`
 },
-/* 9 — DEMO STEP: CHECK */
+/* 11 — DEMO STEP: CHECK */
 {
   html:`<div class="slide">
     <div class="kicker">Demo · Step 1 — report symptoms</div>
@@ -462,7 +473,7 @@ src/
   say:`If the live demo is running, this slide is just your safety net — glance, don't dwell. <b>"Symptoms are categorised and searchable; the stepper at the top shows exactly where you are in the flow."</b>`,
   mark:`<b>Maximum-marks cue:</b> Point out the <b>step indicator</b> — it shows you thought about user orientation and UX, not just function. Small deliberate UX choices read as design maturity.`
 },
-/* 10 — DEMO STEP: RESULTS (hero) */
+/* 12 — DEMO STEP: RESULTS (hero) */
 {
   html:`<div class="slide">
     <div class="kicker">Demo · Step 2 — ranked, explainable conditions</div>
@@ -482,7 +493,7 @@ src/
   say:`<b>Slow right down — this is the intellectual heart of the project.</b> <b>"Most symptom checkers are black boxes. Mine is explainable: it doesn't just say Malaria 55% — it shows the chips Fever, Headache, Chills that produced that score. A user, and an examiner, can audit the reasoning."</b>`,
   mark:`<b>Maximum-marks cue:</b> Land the word <b>"explainable"</b> hard and tie it to trust and safety. Then show honesty: <b>"It presents alternatives — Flu and Typhoid — rather than a single overconfident answer."</b> That combination of explainability + calibrated humility is your standout contribution.`
 },
-/* 11 — HOW THE ENGINE SCORES */
+/* 13 — HOW THE ENGINE SCORES */
 {
   html:`<div class="slide">
     <div class="kicker">Under the hood · the rule engine</div>
@@ -511,7 +522,7 @@ src/
   say:`Prove there's real logic behind the UI. <b>"This is the actual JSON the API returned during today's run. The engine is a weighted scorer — it sums matched-symptom weights and normalises to a confidence. Because it's rule-based and deterministic, I can unit-test it exhaustively."</b>`,
   mark:`<b>Maximum-marks cue:</b> Pre-empt the obvious question — <b>"why not machine learning?"</b> Answer: <b>"With no clinically-validated training data, a transparent, auditable rule engine is the responsible choice — and it's explainable by construction."</b> Turning a limitation into a defensible decision scores heavily.`
 },
-/* API SURFACE */
+/* 14 — API SURFACE */
 {
   html:`<div class="slide">
     <div class="kicker">The API surface · one REST contract</div>
@@ -533,7 +544,7 @@ src/
   say:`Frame the table as the contract, not just a list. <b>"This is the entire boundary between my app and everything behind it — five endpoints. Two do the work, diagnose and providers; the GETs feed the UI. Every request is validated, every response is JSON, and the API is stateless — the client holds no server state."</b>`,
   mark:`<b>Maximum-marks cue:</b> Call it <b>"the integration contract"</b> and tie it back to loose coupling: because this surface is small and stable, any subsystem behind it can change freely. A well-defined, validated API is precisely what a systems-integration examiner is looking for.`
 },
-/* 12 — DEMO STEP: PROVIDERS */
+/* 15 — DEMO STEP: PROVIDERS */
 {
   html:`<div class="slide">
     <div class="kicker">Demo · Step 3 — nearby care + resilience</div>
@@ -552,7 +563,7 @@ src/
   say:`Close the loop. <b>"The specialist and the user's location go back to the API, which returns nearby providers sorted by distance, each with one-tap directions."</b> Then demonstrate resilience deliberately: <b>"Notice the banner — I've left location on default here, and the app tells the user honestly rather than failing."</b>`,
   mark:`<b>Maximum-marks cue:</b> This slide <i>shows</i> the graceful-degradation objective you promised on the Objectives slide — call that back explicitly: <b>"this is objective four, working."</b> Closing your own loops is what pushes a good grade to a top grade.`
 },
-/* 13 — DIVIDER: EVIDENCE */
+/* 16 — DIVIDER: EVIDENCE */
 {
   html:`<div class="slide divider">
     <div class="num">03</div>
@@ -563,7 +574,7 @@ src/
   say:`<b>"Anyone can demo a happy path — let me show you how I verified it."</b> This is where you separate yourself from projects that only ever ran once.`,
   mark:`<b>Maximum-marks cue:</b> Testing & validation is a heavily-weighted rubric section and the one students most often rush. Give it real airtime and specific numbers.`
 },
-/* 14 — TESTING */
+/* 17 — TESTING */
 {
   html:`<div class="slide">
     <div class="kicker">Testing &amp; validation · three levels</div>
@@ -593,7 +604,7 @@ src/
   say:`Point to T2, T4 and T5 specifically. <b>"I didn't only test that it works — I tested that it fails safely: empty input returns a clear 400, denied location keeps the flow alive, a dropped network shows a retry instead of a crash. Three levels: unit, integration, and user-acceptance."</b>`,
   mark:`<b>Maximum-marks cue:</b> Emphasise <b>negative and edge-case testing</b> — examiners look for it and rarely find it. Quote the number: <b>"fifteen automated tests, all passing,"</b> then be honest about the gap: <b>"the next step is a continuous regression suite."</b>`
 },
-/* 15 — ER / DATA MODEL */
+/* 18 — ER / DATA MODEL */
 {
   html:`<div class="slide">
     <div class="kicker">Data model · Appendix A</div>
@@ -613,7 +624,7 @@ src/
   say:`Show you understand your own schema. <b>"The interesting entity is Condition_Symptom — the associative table that resolves the many-to-many between symptoms and conditions. It carries the weight, which means the engine's intelligence lives in data, not in code."</b>`,
   mark:`<b>Maximum-marks cue:</b> Correctly naming the <b>associative/junction entity resolving an M–M relationship</b> is textbook database design language — say it precisely. It signals you can defend the data layer, not just draw it.`
 },
-/* 16 — CHALLENGES */
+/* 19 — CHALLENGES */
 {
   html:`<div class="slide">
     <div class="kicker">Challenges &amp; engineering decisions</div>
@@ -634,7 +645,7 @@ src/
   say:`Tell these as short stories, not a list. <b>"Maps calls cost money and leak keys, so I moved them server-side, cached, and throttled — one decision that solved cost, rate-limits and security at once."</b> Pick one more and move on.`,
   mark:`<b>Maximum-marks cue:</b> This is the slide that proves the work was <i>yours</i> and hard-won. Panels love a candidate who can narrate a real obstacle and the reasoning behind the fix — it's authenticity plus problem-solving in one.`
 },
-/* 17 — OUTCOMES + HISTORY/PROFILE */
+/* 20 — OUTCOMES + HISTORY/PROFILE */
 {
   html:`<div class="slide">
     <div class="kicker">Outcomes &amp; benefits</div>
@@ -656,7 +667,7 @@ src/
   say:`Tie the abstract benefit to something on screen. <b>"The best measure of good integration is that the user never sees it — they experience one app. History and Profile aren't decoration; they're the Query and User entities from my ER model, made visible."</b>`,
   mark:`<b>Maximum-marks cue:</b> Explicitly connect the UI back to the data model (History = Query, Profile = User). Showing the same concept traced from ERD → API → screen demonstrates <b>end-to-end coherence</b> — exactly what a system-integration report is graded on.`
 },
-/* 18 — RECOMMENDATIONS / FUTURE */
+/* 21 — RECOMMENDATIONS / FUTURE */
 {
   html:`<div class="slide">
     <div class="kicker">Recommendations · prototype → production</div>
@@ -673,7 +684,7 @@ src/
   say:`Show forward vision without over-claiming. <b>"This is a working prototype with a clear path to production: scale the stateless API horizontally, add monitoring and CI/CD, and — most importantly — clinically validate the knowledge base before any real-world use."</b>`,
   mark:`<b>Maximum-marks cue:</b> Naming <b>clinical validation</b> as the gate before real use is the single most responsible thing you can say about a health app. It shows ethics and domain awareness — reserve it for here so it lands.`
 },
-/* 19 — CONCLUSION */
+/* 22 — CONCLUSION */
 {
   html:`<div class="slide title-slide">
     <div class="body">
@@ -691,7 +702,7 @@ src/
   say:`Land it, then stop talking. <b>"To summarise: five subsystems integrated into one coherent, explainable and tested system — running live in front of you today, with a clear path to production. Thank you — I'd welcome your questions."</b> Then be quiet and hold eye contact.`,
   mark:`<b>Maximum-marks cue:</b> A three-point close mirrors your objectives and gives the panel their marking summary in your words. Ending with a confident invitation to questions signals you're ready to defend it — not hoping to avoid it.`
 },
-/* 20 — Q&A PREP (for the student) */
+/* 23 — Q&A PREP (for the student) */
 {
   html:`<div class="slide">
     <div class="kicker">Your defence sheet · anticipated questions</div>
@@ -752,7 +763,16 @@ document.addEventListener('keydown',e=>{
 // Touch vs pointer: swipe to navigate on touch; click-zones only for mouse users.
 const isTouch = matchMedia('(hover: none)').matches || ('ontouchstart' in window);
 if(!isTouch){
-  stage.addEventListener('click',e=>{ if(e.target.closest('a,button'))return; const r=stage.getBoundingClientRect(); (e.clientX-r.left> r.width*0.5)?next():prev(); });
+  stage.addEventListener('click',e=>{
+    if(e.target.closest('a,button'))return;
+    // Don't hijack clicks inside a slide that scrolls — dragging its scrollbar or
+    // clicking to focus it must not jump to the next slide. Click the margin
+    // around the card (or use the arrows / arrow keys) to navigate.
+    const body=e.target.closest('.body');
+    if(body && body.scrollHeight>body.clientHeight+2)return;
+    const r=stage.getBoundingClientRect();
+    (e.clientX-r.left> r.width*0.5)?next():prev();
+  });
 }
 let tsx=0,tsy=0,tst=0;
 stage.addEventListener('touchstart',e=>{const t=e.changedTouches[0];tsx=t.clientX;tsy=t.clientY;tst=Date.now();},{passive:true});

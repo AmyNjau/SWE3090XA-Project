@@ -166,9 +166,15 @@ JSON into typed models. That separation is deliberate and defensible.
 
 - `index.html` — the **editable source**, 24 slides, references `./assets/`.
 - `Smart-Health-Presentation.html` — **generated** single-file build (~2 MB) with all
-  9 images inlined as base64. This is the phone-ready file.
+  9 images inlined as base64. This is the phone-ready file. It is committed
+  deliberately, despite being a build artifact, so the file can be downloaded from
+  GitHub and AirDropped without anyone running a build; the cost is ~2 MB of history
+  per deck revision. `.gitattributes` marks it (and `index.html`) binary-ish `-text`
+  so line endings survive and the diff is never a whole-file rewrite.
 - `build-standalone.py` — regenerates the above. **Run it after every edit to
-  `index.html`**, or the phone build goes stale.
+  `index.html`**, or the phone build goes stale. It fails loudly (non-zero exit) if
+  an asset is missing or any `./assets/` reference survives, rather than emitting a
+  file that only breaks on the presenter's phone.
 - `assets/` — 6 app screenshots + 3 report figures.
 
 Notes panel is **hidden by default** on every device. With notes closed the deck fits
@@ -211,8 +217,12 @@ without scrolling at 1280×720 → 1920×1080.
   symptom → conditions → providers flow, "why this match" explainability chips,
   in-app history, profile, graceful location-permission fallback, live Directions.
 - ✅ Presentation: 24 slides, speaker script + scoring cue on every slide, responsive,
-  phone-ready single-file build. Layout verified in a real browser across
-  1280×720 / 1366×768 / 1536×864 / 1920×1080 / 390×844 / 360×640, notes open and closed.
+  phone-ready single-file build. Layout measured in a headless browser across
+  1024×768, 1280×720, 1366×768, 1440×900, 1536×864, 1920×1080, 844×390, 390×844 and
+  360×640 — notes open and closed, all 24 slides, source **and** standalone build:
+  **zero occlusion and zero unreachable content** in every combination. Fullscreen
+  with notes closed fits without scrolling from 1366×768 up; smaller or notes-open
+  combinations scroll inside the slide card rather than cutting content off.
 
 **Known gaps (deliberate, prototype-stage):**
 
@@ -251,6 +261,32 @@ failure mode to watch for — *claims not checked against the running page*):
 3. **`presentation/README.md` had gone stale.** It claimed "21 slides" (there are 24)
    and "speaker notes shown by default" (they are hidden by default, changed in the
    same PR). Corrected.
+4. **The same centring flaw again, one level up.** The sub-agent review caught that
+   `.body` had `justify-content:center` with the identical failure mode, still
+   occluding headings at 1280×720 and 1366×768 with notes open — and that fix (2)
+   had *introduced* a regression at 360×640. Root cause for both: plain centring
+   overflows in **both** directions. Fixed properly with `justify-content:safe center`
+   / `align-items:safe center`, which start-aligns the moment content would overflow.
+5. **Content was squeezed and unreachable.** `.slide` had `overflow-y:auto`, but
+   `.body` is the flex child that actually gets compressed, so the slide's scrollbar
+   never engaged and content was silently cut. Moved the scroll to `.body`.
+6. **The HUD sat on top of slide text** when notes were open — `#stage` reserved
+   `--notes-h + 26px` but the HUD occupies `--notes-h + 12px` plus its own 34px.
+   Now reserves `--notes-h + 70px`, matching the notes-closed clearance.
+7. **Mockups sized off the viewport, not the slide.** `.slide` is capped at
+   `min(680px, 82vh)`, so on a big screen a 262px mockup overflowed regardless of
+   viewport height. Now sized from a `--slide-h` variable that mirrors the cap, with
+   a `clamp()` floor so a mockup never shrinks below legibility.
+8. **Stale slide-index comments.** `/* 4 */` appeared twice and everything after was
+   off by two, so `go(n)` and the comments disagreed. Renumbered 0–23.
+9. **`build-standalone.py` was not reproducible off Windows** (`open(..., "w")`
+   rewrote every line ending) and failed silently on unmatched assets. Now uses
+   `newline=""`, asserts no `${A}` or `./assets/` survives, and exits non-zero.
+
+**The lesson, recorded because it is the failure mode to watch for:** the first pass
+declared victory on a measurement that was too narrow — it checked whether the
+*slide box* overlapped the notes, not whether *content inside the slide* was painting
+over its own heading. The measurement has to target the thing that actually breaks.
 
 ---
 

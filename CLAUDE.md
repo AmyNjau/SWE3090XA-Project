@@ -36,8 +36,12 @@ Remote: `origin` = github.com/AmyNjau/SWE3090XA-Project (`gh` authed as AmyNjau)
 - **TypeScript:** never use `any` unless 100% necessary or explicitly instructed.
 - **Commands:** don't run dev-server commands (assume it's running); don't run build
   commands unless told; DO run checks like typecheck/lint.
-- **Package managers:** `pnpm` if the project already uses it, else `bun`. Never `npm`/`yarn`.
+- **Package managers:** `pnpm` if the project already uses it, else `bun`. Never `npm`/`yarn`
+  — **except `backend/`**, which is locked to `npm run setup` by the Google Drive
+  workaround below. That exception is deliberate; don't "fix" it.
 - **Tech stack (when uncertain, prefer):** Tailwind, TypeScript, Bun, React, Convex, Clerk, Cloudflare.
+  This is the user's general preference for *new* projects. **This repo is Flutter +
+  Express + plain JS and has no TypeScript** — don't import that stack here.
 - **Code style:** concise, simple solutions; propose a simpler approach when one exists.
 - **Scope:** if asked to do too much at once, stop and say so.
 - **Verification:** use a sub-agent when computer use helps complete/verify work.

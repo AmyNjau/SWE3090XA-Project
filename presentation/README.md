@@ -37,9 +37,12 @@ open it (launches in Safari). Fully responsive — tested at iPhone size.
 | **📝 Notes** button (bottom bar) | Show/hide the speaker script (hidden by default) |
 
 Notes start hidden everywhere, so what the room sees is always a full, clean slide.
-With notes closed the deck fits without scrolling at every common laptop size
-(1280×720 through 1920×1080). Open the notes on a short screen, or view on a phone,
-and a dense slide scrolls vertically instead of being cut off.
+Present **fullscreen** — with notes closed the deck then fits without scrolling from
+1366×768 upward. In a smaller window, on a 1280×720 screen, with the notes open, or
+on a phone, a dense slide scrolls vertically inside its card. Nothing is ever cut
+off or hidden behind the notes panel: measured across 1024×768, 1280×720, 1366×768,
+1440×900, 1536×864, 1920×1080, 844×390, 390×844 and 360×640, notes open and closed,
+on all 24 slides.
 
 ## What's in the deck (24 slides)
 
