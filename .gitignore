@@ -25,3 +25,7 @@ mobile/macos/
 mobile/.idea/
 *.iml
 .gstack/
+
+# Python bytecode (docs/reports/build.py)
+__pycache__/
+*.pyc
