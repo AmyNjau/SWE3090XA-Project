@@ -12,16 +12,23 @@ python build.py system-integration-report.md   # one report
 python build.py --all                          # every *.md here
 ```
 
-Outputs land in `build/`. Both the PDF and the DOCX are committed so the
-finished documents can be downloaded from GitHub and submitted without anyone
-having to run the build.
+Outputs land in `build/`, and both are committed so the finished documents can
+be downloaded from GitHub without anyone having to run the build.
+
+**The PDF is the submission artifact.** The DOCX is an editable convenience
+copy: it carries the full text, tables and figures, but Word ignores the
+stylesheet, so it has no branding, no title-page break and no working contents
+links. Submit the PDF; use the DOCX only if you need to edit in Word.
+
+Nothing is written into `build/` until every check has passed, so a failed run
+leaves the previous good documents untouched.
 
 Useful flags:
 
 | Flag | Effect |
 |---|---|
 | `--no-docx` | PDF only (faster while iterating on wording) |
-| `--no-toc-numbers` | Skip the second pass that numbers the contents page |
+| `--no-toc-numbers` | Build without the measuring pass; the contents page then lists sections with no page numbers |
 
 ## Writing a report
 
@@ -47,15 +54,31 @@ Every key except `semester` is required; the build fails if one is missing.
 
 Conventions the stylesheet expects:
 
-- `#` is a numbered top-level section and starts a new page. `##` is a
-  subsection. Both are picked up into the contents page automatically, so do
-  **not** write a contents page by hand.
+- `#` is a top-level section and starts a new page; `##` is a subsection. Both
+  are picked up into the contents page automatically, so do **not** write a
+  contents page by hand. Section numbers are written by hand in the heading
+  text (`# 3. Integration Architecture`); nothing is auto-numbered.
 - Captions are a lone italic line under the figure or table:
   `*Figure 3.1: Integration architecture.*`
-- Figures are normal markdown images pointing at `../figures/`, optionally sized:
-  `![Architecture](../figures/fig3_1_architecture.png){width=full}`
+- Figures are normal markdown images pointing at `../figures/`:
+  `![Architecture](../figures/fig3_1_architecture.png)`. An image immediately
+  followed by an italic caption line is folded into a single unbreakable
+  `<figure>`, so a figure is never split from its caption or stranded on a page
+  of its own.
 - Images must be local files that exist. Remote images are rejected so the build
   stays reproducible offline.
+
+Rules headings must follow, all of them enforced with a loud failure rather
+than a silently wrong contents page:
+
+- A heading must not **wrap onto a second line** when rendered. Keep it short.
+- Each heading's exact text must appear in the rendered body once per heading.
+  Two sections may share a title, but no ordinary line of body text may be
+  identical to a heading.
+- Setext headings (`Heading` underlined with `===` or `---`) are rejected; use
+  `#` and `##`.
+- Headings are emitted as raw HTML, so markdown emphasis inside them
+  (`**bold**`) renders as literal asterisks. Keep headings plain text.
 
 ## How the build works
 
@@ -84,10 +107,15 @@ the delivered document.
 ## Requirements
 
 - `make-pdf` from gstack (`pdf.exe`). Set `MAKE_PDF_BIN` if it is somewhere
-  unusual.
-- `pdftotext` (poppler; ships with Git for Windows) to number the contents page.
-  Without it, build with `--no-toc-numbers`.
+  unusual; if that variable points at a non-file the build stops rather than
+  quietly falling back.
+- `pdftotext` to number the contents page. Git for Windows ships one (Xpdf, at
+  `C:\Program Files\Git\mingw64\bin`), and poppler provides it elsewhere. It is
+  always invoked with `-enc UTF-8`, because Xpdf otherwise emits Latin-1 and
+  mangles any non-ASCII heading. Without `pdftotext`, build with
+  `--no-toc-numbers`.
 
-The build fails loudly and exits non-zero on a missing tool, a missing brand
-asset, a missing image, a missing front-matter key, or a heading it cannot
-locate. It never emits a document that is quietly wrong.
+The build exits non-zero on a missing tool, a missing brand asset, a missing or
+remote image, a missing front-matter key, a rejected heading style, a heading it
+cannot locate, an ambiguous heading title, or any change in pagination between
+the two passes. Output is moved into `build/` only after all of that passes.

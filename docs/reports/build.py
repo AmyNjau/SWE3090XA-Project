@@ -44,7 +44,9 @@ import subprocess
 import sys
 import tempfile
 from base64 import b64encode
+from collections import Counter
 from pathlib import Path
+from urllib.parse import unquote
 
 HERE = Path(__file__).resolve().parent
 DOCS = HERE.parent
@@ -85,7 +87,9 @@ def die(msg: str) -> None:
 def find_make_pdf() -> str:
     """Locate gstack's make-pdf binary."""
     env = os.environ.get("MAKE_PDF_BIN")
-    if env and Path(env).is_file():
+    if env:
+        if not Path(env).is_file():
+            die(f"MAKE_PDF_BIN is set to {env!r}, which is not a file")
         return env
     candidates = [
         Path.home() / ".claude/skills/gstack/make-pdf/dist/pdf.exe",
@@ -111,7 +115,10 @@ def find_pdftotext() -> str:
     found = shutil.which("pdftotext")
     if found:
         return found
-    for c in [Path("C:/Program Files/Git/mingw64/bin/pdftotext.exe"), Path("/mingw64/bin/pdftotext")]:
+    for c in [
+        Path("C:/Program Files/Git/mingw64/bin/pdftotext.exe"),
+        Path("C:/Program Files (x86)/Git/mingw64/bin/pdftotext.exe"),
+    ]:
         if c.is_file():
             return str(c)
     die(
@@ -157,26 +164,52 @@ def slugify(text: str) -> str:
     return s or "section"
 
 
-def check_images(body: str, source: Path) -> list[Path]:
+def fence_mask(body: str) -> list[bool]:
+    """Per-line flags marking lines inside a fenced code block.
+
+    Handles both ``` and ~~~ fences, and only closes on a fence of the same
+    character that is at least as long as the one that opened it.
+    """
+    inside = [False] * len(body.splitlines())
+    opener: tuple[str, int] | None = None
+    for i, line in enumerate(body.splitlines()):
+        m = re.match(r"^\s*(`{3,}|~{3,})", line)
+        if m and opener is None:
+            opener = (m.group(1)[0], len(m.group(1)))
+            inside[i] = True
+            continue
+        if m and opener is not None:
+            char, length = opener
+            if m.group(1)[0] == char and len(m.group(1)) >= length:
+                inside[i] = True
+                opener = None
+                continue
+        inside[i] = opener is not None
+    return inside
+
+
+def check_images(body: str, source: Path) -> None:
     """Assert every referenced image is local and present.
 
     This replaces make-pdf's --strict, which cannot be used here: it rejects any
     image outside the markdown's own directory, and the figures deliberately
     live in docs/figures/ so the reports and the deck share one copy.
     """
-    refs = re.findall(r"!\[[^\]]*\]\(([^)\s]+)", body)
-    resolved: list[Path] = []
+    masked = "\n".join(
+        "" if inside else line
+        for line, inside in zip(body.splitlines(), fence_mask(body))
+    )
+    refs = re.findall(r"!\[[^\]]*\]\(\s*<?([^)>\s]+)", masked)
     missing: list[str] = []
     remote: list[str] = []
     for ref in refs:
-        if re.match(r"^[a-z]+://", ref, re.I):
+        if re.match(r"^([a-z][a-z0-9+.-]*:|//)", ref, re.I):
             remote.append(ref)
             continue
-        path = (source.parent / ref).resolve()
+        # Markdown percent-encodes spaces in paths.
+        path = (source.parent / unquote(ref)).resolve()
         if not path.is_file():
             missing.append(ref)
-        else:
-            resolved.append(path)
     if remote:
         die(
             "remote images are not allowed in a report source (the build must be "
@@ -184,20 +217,25 @@ def check_images(body: str, source: Path) -> list[Path]:
         )
     if missing:
         die("referenced image(s) not found: " + ", ".join(missing))
-    return resolved
 
 
 def extract_headings(body: str) -> list[dict]:
     """Find level 1-2 ATX headings outside fenced code blocks."""
     headings: list[dict] = []
-    fenced = False
     seen: dict[str, int] = {}
-    for i, line in enumerate(body.splitlines()):
-        if line.lstrip().startswith("```"):
-            fenced = not fenced
+    lines = body.splitlines()
+    masked = fence_mask(body)
+    for i, line in enumerate(lines):
+        if masked[i]:
             continue
-        if fenced:
-            continue
+        # Setext headings would render as headings but carry no anchor, no page
+        # break and no contents entry, so refuse them rather than drop them.
+        if re.match(r"^(=+|-{2,})\s*$", line) and i and lines[i - 1].strip() and not masked[i - 1]:
+            if not re.match(r"^\s*[-|]", lines[i - 1]):
+                die(
+                    f"line {i + 1}: setext heading ('{lines[i - 1].strip()}' underlined "
+                    "with = or -) is not supported. Write it as '# ' or '## ' instead."
+                )
         m = re.match(r"^(#{1,2})\s+(.*\S)\s*$", line)
         if not m:
             continue
@@ -210,6 +248,43 @@ def extract_headings(body: str) -> list[dict]:
     if not headings:
         die("no headings found in the source; a report needs at least one")
     return headings
+
+
+def fold_figures(body: str) -> str:
+    """Bind each image to the caption line beneath it.
+
+    A bare image followed by a separate italic caption paragraph lets the
+    renderer put the image on one page and its caption on the next, which left
+    three orphaned captions and two near-blank pages in the first build.
+    Wrapping both in one unbreakable <figure> keeps them together.
+    """
+    lines = body.splitlines()
+    masked = fence_mask(body)
+    out: list[str] = []
+    i = 0
+    while i < len(lines):
+        m = re.match(r"^!\[([^\]]*)\]\(\s*<?([^)>\s]+)>?\s*\)(\{[^}]*\})?\s*$", lines[i])
+        if not m or masked[i]:
+            out.append(lines[i])
+            i += 1
+            continue
+        j = i + 1
+        while j < len(lines) and not lines[j].strip():
+            j += 1
+        cap = re.match(r"^\*([^*].*)\*\s*$", lines[j]) if j < len(lines) else None
+        if not cap:
+            out.append(lines[i])
+            i += 1
+            continue
+        alt, src = html.escape(m.group(1)), html.escape(m.group(2), quote=True)
+        out.append(
+            '<figure class="usiu-figure">'
+            f'<img src="{src}" alt="{alt}">'
+            f'<figcaption>{html.escape(cap.group(1).strip())}</figcaption>'
+            "</figure>"
+        )
+        i = j + 1
+    return "\n".join(out)
 
 
 def rewrite_headings(body: str, headings: list[dict]) -> str:
@@ -246,6 +321,7 @@ def cover_html(meta: dict[str, str]) -> str:
     return f"""<section class="usiu-cover">
   <img class="cover-logo" src="{logo}" alt="United States International University Africa logo">
   <div class="cover-university">United States International University &ndash; Africa</div>
+  <div class="cover-university-short">(USIU-Africa)</div>
   <div class="cover-school">{g("school")}</div>
   <div class="cover-school">{g("department")}</div>
   <div class="cover-band">
@@ -317,6 +393,7 @@ body {{ color: var(--usiu-ink); }}
 /* Cover ------------------------------------------------------------------ */
 .usiu-cover {{ text-align: center; padding: 0.85in 0 0; }}
 .usiu-cover .cover-university,
+.usiu-cover .cover-university-short,
 .usiu-cover .cover-school,
 .usiu-cover .cover-project-label,
 .usiu-cover .cover-project,
@@ -325,6 +402,9 @@ body {{ color: var(--usiu-ink); }}
 .cover-university {{
   font-size: 15pt; font-weight: 700; color: var(--usiu-blue);
   letter-spacing: 0.02em; text-transform: uppercase; line-height: 1.3;
+}}
+.cover-university-short {{
+  font-size: 12pt; font-weight: 600; color: var(--usiu-blue); margin-top: 2pt;
 }}
 .cover-school {{ font-size: 11.5pt; color: var(--usiu-grey); margin-top: 4pt; }}
 .cover-band {{
@@ -392,6 +472,17 @@ th {{
 td {{ padding: 6pt 8pt; border: 1px solid #c9d2e4; vertical-align: top; }}
 tbody tr:nth-child(even) td {{ background: #f4f6fb; }}
 figure, img {{ max-width: 100%; }}
+/* One unbreakable block, so a figure is never split from its caption and never
+   pushed alone onto a page of its own. */
+.usiu-figure {{
+  break-inside: avoid; page-break-inside: avoid;
+  text-align: center; margin: 14pt 0;
+}}
+.usiu-figure img {{ max-width: 100%; max-height: 6.2in; height: auto; }}
+.usiu-figure figcaption {{
+  color: var(--usiu-grey); font-size: 9.5pt; font-style: italic;
+  margin-top: 6pt;
+}}
 /* Figure and table captions: the source writes them as a lone italic line. */
 p > em:only-child {{
   display: block; text-align: center; color: var(--usiu-grey);
@@ -415,9 +506,9 @@ def run_make_pdf(binary: str, src: Path, out: Path, meta: dict[str, str], fmt: s
         # stale for the rest of the document.
         "--title", meta["title"],
     ]
-    proc = subprocess.run(cmd, capture_output=True, text=True)
+    proc = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace")
     if proc.returncode != 0:
-        sys.stderr.write(proc.stdout + "\n" + proc.stderr + "\n")
+        sys.stderr.write((proc.stdout or "") + "\n" + (proc.stderr or "") + "\n")
         die(f"make-pdf failed ({fmt}) with exit code {proc.returncode}")
     if not out.is_file() or out.stat().st_size < 1024:
         die(f"make-pdf reported success but {out} is missing or suspiciously small")
@@ -425,12 +516,19 @@ def run_make_pdf(binary: str, src: Path, out: Path, meta: dict[str, str], fmt: s
 
 def pdf_pages_text(pdftotext: str, pdf: Path) -> list[str]:
     """Return the text of each page, in order."""
+    # -enc UTF-8 matters: the pdftotext that ships with Git for Windows is Xpdf,
+    # whose default output encoding is Latin-1, which mangles any non-ASCII
+    # heading into replacement characters and makes it unmatchable.
     proc = subprocess.run(
-        [pdftotext, "-layout", str(pdf), "-"], capture_output=True, text=True, encoding="utf-8", errors="replace"
+        [pdftotext, "-layout", "-enc", "UTF-8", str(pdf), "-"],
+        capture_output=True, text=True, encoding="utf-8", errors="replace",
     )
     if proc.returncode != 0:
         die(f"pdftotext failed: {proc.stderr.strip()}")
-    return proc.stdout.split("\f")
+    pages = proc.stdout.split("\f")
+    if pages and not pages[-1].strip():
+        pages.pop()  # trailing form feed, not a real page
+    return pages
 
 
 def first_body_page(pages: list[str]) -> int:
@@ -453,23 +551,52 @@ def locate_headings(pages: list[str], headings: list[dict], start: int) -> dict[
     string again. Matching advances a cursor, so headings are also required to
     appear in source order.
     """
-    per_page = [[re.sub(r"\s+", " ", ln).strip() for ln in p.splitlines()] for p in pages]
+    # Flatten to (page index, line) so the cursor can advance past a matched
+    # line rather than only to its page. Advancing by page let a repeated
+    # heading title re-match its own earlier occurrence and be numbered wrongly.
+    flat = [
+        (i, re.sub(r"\s+", " ", ln).strip())
+        for i, page in enumerate(pages)
+        if i >= start
+        for ln in page.splitlines()
+    ]
+
+    # Every heading title must occur in the body exactly as many times as it is
+    # used as a heading. Anything else -- a repeated title, or a title that also
+    # appears as an ordinary body line -- makes the mapping ambiguous, and both
+    # passes would agree on the same wrong answer, so the drift check cannot
+    # catch it. Refuse instead of numbering it wrongly.
+    body_counts = Counter(line for _, line in flat)
+    wanted = Counter(re.sub(r"\s+", " ", h["text"]).strip() for h in headings)
+    ambiguous = sorted(t for t, n in wanted.items() if body_counts.get(t, 0) != n)
+    if ambiguous:
+        die(
+            "these heading titles do not appear in the rendered body exactly once "
+            "per heading, so their page numbers cannot be trusted: "
+            + "; ".join(ambiguous)
+            + ". Make each heading unique, and make sure no ordinary line of text "
+            "is identical to a heading."
+        )
+
     found: dict[str, int] = {}
     unresolved: list[str] = []
-    cursor = start
+    cursor = 0
     for h in headings:
         needle = re.sub(r"\s+", " ", h["text"]).strip()
-        for idx in range(cursor, len(per_page)):
-            if any(line == needle for line in per_page[idx]):
-                found[h["id"]] = idx + 1
-                cursor = idx
+        for j in range(cursor, len(flat)):
+            if flat[j][1] == needle:
+                found[h["id"]] = flat[j][0] + 1
+                cursor = j + 1
                 break
         else:
             unresolved.append(h["text"])
     if unresolved:
         die(
             "could not find these headings as standalone lines in the rendered "
-            "PDF, so the contents page cannot be numbered: " + "; ".join(unresolved)
+            "PDF, so the contents page cannot be numbered: "
+            + "; ".join(unresolved)
+            + ". The usual cause is a heading long enough to wrap onto a second "
+            "line in the rendered page; shorten it."
         )
     return found
 
@@ -480,7 +607,7 @@ def build_one(source: Path, binary: str, want_numbers: bool, keep_docx: bool) ->
     meta, body = split_front_matter(source.read_text(encoding="utf-8"))
     check_images(body, source)
     headings = extract_headings(body)
-    body_html = rewrite_headings(body, headings)
+    body_html = fold_figures(rewrite_headings(body, headings))
     BUILD_DIR.mkdir(parents=True, exist_ok=True)
 
     def assemble(pages: dict[str, int] | None, with_css: bool = True) -> str:
@@ -493,21 +620,32 @@ def build_one(source: Path, binary: str, want_numbers: bool, keep_docx: bool) ->
     # paths (../figures/...) resolve identically.
     stage = source.with_name(f".{source.stem}.staged.md")
     pdf_out = BUILD_DIR / f"{source.stem}.pdf"
+    docx_out = BUILD_DIR / f"{source.stem}.docx"
+    # Render to a scratch path and only move into build/ once every assertion
+    # has passed, so a failed run cannot replace the committed deliverable with
+    # a half-built one.
+    scratch = Path(tempfile.mkdtemp(prefix="usiu-report-"))
+    pdf_tmp = scratch / pdf_out.name
+    docx_tmp = scratch / docx_out.name
     try:
-        stage.write_text(assemble(None), encoding="utf-8", newline="\n")
-        run_make_pdf(binary, stage, pdf_out, meta, "pdf")
+        # Without the second pass this render *is* the deliverable, so it must
+        # not carry the measurement pass's placeholders or sentinel.
+        stage.write_text(
+            assemble(None if want_numbers else {}), encoding="utf-8", newline="\n"
+        )
+        run_make_pdf(binary, stage, pdf_tmp, meta, "pdf")
 
         if want_numbers:
             pdftotext = find_pdftotext()
-            pages_text = pdf_pages_text(pdftotext, pdf_out)
+            pages_text = pdf_pages_text(pdftotext, pdf_tmp)
             first_pass_pages = len(pages_text)
             body_start = first_body_page(pages_text)
             numbers = locate_headings(pages_text, headings, body_start)
             stage.write_text(assemble(numbers), encoding="utf-8", newline="\n")
-            run_make_pdf(binary, stage, pdf_out, meta, "pdf")
+            run_make_pdf(binary, stage, pdf_tmp, meta, "pdf")
 
             # Filling in the numbers must not have moved anything.
-            second = pdf_pages_text(pdftotext, pdf_out)
+            second = pdf_pages_text(pdftotext, pdf_tmp)
             if len(second) != first_pass_pages:
                 die(
                     "pagination changed between passes "
@@ -526,16 +664,19 @@ def build_one(source: Path, binary: str, want_numbers: bool, keep_docx: bool) ->
             # Page numbers measured from the PDF do not apply once Word
             # repaginates, so the DOCX contents page carries none.
             stage.write_text(assemble({}, with_css=False), encoding="utf-8", newline="\n")
-            run_make_pdf(binary, stage, BUILD_DIR / f"{source.stem}.docx", meta, "docx")
+            run_make_pdf(binary, stage, docx_tmp, meta, "docx")
+
+        shutil.move(str(pdf_tmp), str(pdf_out))
+        if keep_docx:
+            shutil.move(str(docx_tmp), str(docx_out))
     finally:
         if stage.exists():
             stage.unlink()
+        shutil.rmtree(scratch, ignore_errors=True)
 
-    size_kb = pdf_out.stat().st_size // 1024
-    print(f"{pdf_out.relative_to(REPO)}  ({size_kb} KB)")
+    print(f"{pdf_out.relative_to(REPO)}  ({pdf_out.stat().st_size // 1024} KB)")
     if keep_docx:
-        docx = BUILD_DIR / f"{source.stem}.docx"
-        print(f"{docx.relative_to(REPO)}  ({docx.stat().st_size // 1024} KB)")
+        print(f"{docx_out.relative_to(REPO)}  ({docx_out.stat().st_size // 1024} KB)")
 
 
 def main() -> None:
@@ -547,11 +688,22 @@ def main() -> None:
     args = ap.parse_args()
 
     if args.all or not args.sources:
-        sources = sorted(p for p in HERE.glob("*.md") if p.name != "README.md")
+        # Skips README.md and any leftover ".<name>.staged.md" from a killed run.
+        sources = sorted(
+            p for p in HERE.glob("*.md")
+            if p.name != "README.md" and not p.name.startswith(".")
+        )
         if not sources:
             die("no report sources found in docs/reports/")
     else:
-        sources = [Path(s) if Path(s).is_absolute() else (HERE / s) for s in args.sources]
+        # A relative path is resolved against the working directory first (what
+        # a shell user expects), falling back to this folder.
+        sources = []
+        for s in args.sources:
+            p = Path(s)
+            if not p.is_absolute() and not p.is_file():
+                p = HERE / s
+            sources.append(p)
 
     binary = find_make_pdf()
     for src in sources:
