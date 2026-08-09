@@ -1,0 +1,5 @@
+# The presentation deck and its generated single-file build must round-trip
+# byte-for-byte, so `python build-standalone.py` produces the same output on
+# Windows and POSIX and the 2 MB artifact never shows a whole-file phantom diff.
+presentation/index.html                     -text
+presentation/Smart-Health-Presentation.html -text
