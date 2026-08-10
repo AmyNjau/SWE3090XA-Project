@@ -10,6 +10,7 @@ student_id: 669008
 supervisor: Mr Fredrick Ogore
 date: June 2026
 semester: Summer Semester 2026
+short_title: Smart Health
 ---
 
 # 1. Introduction

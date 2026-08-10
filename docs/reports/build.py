@@ -332,11 +332,14 @@ def fold_figures(body: str, source: Path, variant: str = "original") -> str:
     return "\n".join(out)
 
 
-def rewrite_headings(body: str, headings: list[dict]) -> str:
-    """Replace markdown headings with anchored HTML, page-breaking each H1.
+def rewrite_headings(body: str, headings: list[dict], page_break_sections: bool = False) -> str:
+    """Replace markdown headings with anchored HTML.
 
-    make-pdf is run with --no-chapter-breaks so that page breaks are controlled
-    here and nowhere else; two break sources produced a blank page.
+    Sections run on by default, as they do in a Word-produced academic report:
+    a new section starts wherever the previous one ended. Set
+    `page_break_sections` in the front matter to start each top-level section on
+    a fresh page instead. make-pdf is run with --no-chapter-breaks either way, so
+    page breaks are controlled here and nowhere else.
     """
     lines = body.splitlines()
     by_line = {h["line"]: h for h in headings}
@@ -350,7 +353,7 @@ def rewrite_headings(body: str, headings: list[dict]) -> str:
         tag = f"h{h['level']}"
         esc = html.escape(h["text"])
         if h["level"] == 1:
-            if not first_h1:
+            if not first_h1 and page_break_sections:
                 out.append('<div class="pagebreak"></div>')
                 out.append("")
             first_h1 = False
@@ -359,30 +362,34 @@ def rewrite_headings(body: str, headings: list[dict]) -> str:
 
 
 def cover_html(meta: dict[str, str]) -> str:
+    """Plain, centred title page in the style USIU coursework uses.
+
+    Deliberately typographic rather than designed: no colour band, no rules,
+    just the university, the title and the submission details, with the logo
+    above them. This matches the reference report the user supplied.
+    """
     logo = data_uri(BRAND / "usiu-logo.png")
-    logo_white = data_uri(BRAND / "usiu-logo-white.png")
     g = lambda k: html.escape(meta.get(k, ""))  # noqa: E731
-    semester = f'<div class="cover-semester">{g("semester")}</div>' if meta.get("semester") else ""
+    tagline = f'<div class="cover-tagline">{g("tagline")}</div>' if meta.get("tagline") else ""
+    semester = f'<div class="cover-line">{g("semester")}</div>' if meta.get("semester") else ""
     return f"""<section class="usiu-cover">
   <img class="cover-logo" src="{logo}" alt="United States International University Africa logo">
-  <div class="cover-university">United States International University &ndash; Africa</div>
-  <div class="cover-university-short">(USIU-Africa)</div>
+  <div class="cover-university">UNITED STATES INTERNATIONAL UNIVERSITY &ndash; AFRICA</div>
   <div class="cover-school">{g("school")}</div>
   <div class="cover-school">{g("department")}</div>
-  <div class="cover-band">
-    <img class="cover-band-logo" src="{logo_white}" alt="">
-    <div class="cover-band-title">{g("title")}</div>
-  </div>
-  <div class="cover-project-label">Project</div>
+  <h1 class="cover-title">{g("title")}</h1>
   <div class="cover-project">{g("project")}</div>
-  <table class="cover-meta">
-    <tr><th>Course</th><td>{g("course_code")} &ndash; {g("course_title")}</td></tr>
-    <tr><th>Submitted by</th><td>{g("student")}</td></tr>
-    <tr><th>Registration number</th><td>{g("student_id")}</td></tr>
-    <tr><th>Supervisor</th><td>{g("supervisor")}</td></tr>
-    <tr><th>Submission date</th><td>{g("date")}</td></tr>
-  </table>
-  {semester}
+  {tagline}
+  <div class="cover-block">
+    <div class="cover-line">Submitted by</div>
+    <div class="cover-line cover-strong">{g("student")} &ndash; {g("student_id")}</div>
+  </div>
+  <div class="cover-block">
+    <div class="cover-line">Course: {g("course_code")} &ndash; {g("course_title")}</div>
+    <div class="cover-line">Supervisor: {g("supervisor")}</div>
+    <div class="cover-line">Date of submission: {g("date")}</div>
+    {semester}
+  </div>
 </section>
 <div class="pagebreak"></div>
 """
@@ -429,6 +436,14 @@ def toc_html(headings: list[dict], pages: dict[str, int] | None) -> str:
 
 
 def brand_css() -> str:
+    """Stylesheet for an academic report set the way USIU coursework is set.
+
+    Typographic rather than designed: Times New Roman, justified body with a
+    first-line indent, a running header naming the course and author, and a bare
+    page number in the footer. The only brand colour is USIU blue on headings
+    and table headers, kept restrained so the document still reads as a
+    university report rather than a brochure.
+    """
     return f"""<style>
 :root {{
   --usiu-blue: {USIU_BLUE};
@@ -437,123 +452,118 @@ def brand_css() -> str:
   --usiu-ink: {INK};
   --usiu-grey: {GREY};
 }}
-body {{ color: var(--usiu-ink); }}
+
+body {{
+  font-family: "Times New Roman", Times, Georgia, serif;
+  font-size: 12pt;
+  line-height: 1.5;
+  color: #000000;
+  text-align: justify;
+}}
 .pagebreak {{ break-after: page; }}
 
-/* The cover carries no running header, no page number and no margin box, so
-   the title page reads as a title page and the blue band can run full bleed.
-   Everything on the cover supplies its own horizontal padding instead. */
+/* The title page carries no running header and no page number. */
 @page :first {{ margin: 0; }}
 
 /* Cover ------------------------------------------------------------------ */
-.usiu-cover {{ text-align: center; padding: 0.85in 0 0; }}
-.usiu-cover .cover-university,
-.usiu-cover .cover-university-short,
-.usiu-cover .cover-school,
-.usiu-cover .cover-project-label,
-.usiu-cover .cover-project,
-.usiu-cover .cover-semester {{ padding-left: 0.9in; padding-right: 0.9in; }}
-.cover-logo {{ width: 250px; max-width: 60%; height: auto; margin: 0 auto 18pt; display: block; }}
-.cover-university {{
-  font-size: 15pt; font-weight: 700; color: var(--usiu-blue);
-  letter-spacing: 0.02em; text-transform: uppercase; line-height: 1.3;
+.usiu-cover {{ text-align: center; padding: 1in 0.9in 0; }}
+.cover-logo {{ width: 190px; max-width: 46%; height: auto; margin: 0 auto 22pt; display: block; }}
+.cover-university {{ font-size: 13.5pt; font-weight: bold; letter-spacing: 0.01em; }}
+.cover-school {{ font-size: 12pt; margin-top: 4pt; }}
+h1.cover-title {{
+  font-size: 17pt; font-weight: bold; margin: 34pt auto 0; max-width: 92%;
+  line-height: 1.35; color: #000000; border: none; padding: 0; text-align: center;
 }}
-.cover-university-short {{
-  font-size: 12pt; font-weight: 600; color: var(--usiu-blue); margin-top: 2pt;
-}}
-.cover-school {{ font-size: 11.5pt; color: var(--usiu-grey); margin-top: 4pt; }}
-.cover-band {{
-  background: var(--usiu-blue); color: #fff; margin: 26pt 0 0;
-  padding: 16pt 0.9in; border-bottom: 5px solid var(--usiu-gold);
-}}
-.cover-band-logo {{ width: 150px; height: auto; display: block; margin: 0 auto 10pt; }}
-.cover-band-title {{
-  font-size: 21pt; font-weight: 700; letter-spacing: 0.03em;
-  text-transform: uppercase; color: #fff; line-height: 1.25;
-}}
-.cover-project-label {{
-  margin-top: 24pt; font-size: 9.5pt; letter-spacing: 0.14em;
-  text-transform: uppercase; color: var(--usiu-grey);
-}}
-.cover-project {{
-  font-size: 14pt; font-weight: 600; color: var(--usiu-blue-dark);
-  margin: 5pt auto 0; max-width: 86%; line-height: 1.4;
-}}
-table.cover-meta {{
-  margin: 30pt auto 0; border-collapse: collapse; text-align: left;
-  font-size: 11pt; max-width: 84%;
-}}
-/* Beats the body zebra-striping rule below, which is more specific. */
-table.cover-meta tbody tr th, table.cover-meta tbody tr td {{
-  border: none; padding: 5pt 10pt; vertical-align: top; background: none;
-}}
-table.cover-meta th {{
-  color: var(--usiu-grey); font-weight: 600; white-space: nowrap;
-  text-align: left; width: 1%;
-}}
-table.cover-meta td {{ color: var(--usiu-ink); }}
-.cover-semester {{ margin-top: 26pt; font-size: 10.5pt; color: var(--usiu-grey); }}
+.cover-project {{ font-size: 12.5pt; margin-top: 14pt; }}
+.cover-tagline {{ font-size: 12pt; font-style: italic; margin-top: 12pt; }}
+.cover-block {{ margin-top: 30pt; }}
+.cover-line {{ font-size: 12pt; margin-top: 5pt; }}
+.cover-strong {{ font-weight: bold; }}
 
 /* Contents --------------------------------------------------------------- */
-.usiu-toc {{ padding-top: 4pt; }}
+.usiu-toc {{ text-align: left; }}
 .toc-heading {{
-  color: var(--usiu-blue); font-size: 17pt; margin: 0 0 4pt;
-  padding-bottom: 6pt; border-bottom: 3px solid var(--usiu-gold);
+  font-size: 14pt; font-weight: bold; color: var(--usiu-blue);
+  margin: 0 0 14pt; text-align: left;
 }}
 .toc-row {{
-  display: flex; align-items: baseline; margin: 7pt 0; font-size: 11pt;
+  display: flex; align-items: baseline; margin: 5pt 0; font-size: 12pt;
   position: relative; /* anchors the measuring-pass sentinel to this row */
 }}
-.toc-row a {{ color: var(--usiu-ink); text-decoration: none; }}
-.toc-l1 {{ font-weight: 600; margin-top: 11pt; }}
-.toc-l1 a {{ color: var(--usiu-blue-dark); }}
-.toc-l2 {{ padding-left: 20pt; font-size: 10.5pt; }}
+.toc-row a {{ color: #000000; text-decoration: none; }}
+.toc-l1 {{ margin-top: 9pt; }}
+.toc-l2 {{ padding-left: 24pt; font-size: 11.5pt; }}
 .toc-dots {{
-  flex: 1 1 auto; border-bottom: 1px dotted var(--usiu-grey);
-  margin: 0 6pt; transform: translateY(-3px); min-width: 12pt;
+  flex: 1 1 auto; border-bottom: 1px dotted #666666;
+  margin: 0 5pt; transform: translateY(-3px); min-width: 12pt;
 }}
 /* Fixed width and right alignment so a one-digit placeholder and a two-digit
    real page number occupy identical space; otherwise the second pass could
    reflow the very rows the first pass measured. */
 .toc-page {{
-  color: var(--usiu-grey); font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums;
   min-width: 26pt; text-align: right; flex: 0 0 auto;
 }}
 
 /* Body ------------------------------------------------------------------- */
 h1.usiu-h1 {{
-  color: var(--usiu-blue); font-size: 17pt; margin: 0 0 12pt;
-  padding-bottom: 6pt; border-bottom: 3px solid var(--usiu-gold);
+  font-size: 14pt; font-weight: bold; color: var(--usiu-blue);
+  margin: 20pt 0 8pt; text-align: left; border: none; padding: 0;
+  break-after: avoid;
 }}
-h2.usiu-h2 {{ color: var(--usiu-blue-dark); font-size: 13pt; margin: 18pt 0 6pt; }}
-p, li {{ line-height: 1.5; }}
+h2.usiu-h2 {{
+  font-size: 12.5pt; font-weight: bold; color: var(--usiu-blue-dark);
+  margin: 15pt 0 6pt; text-align: left; break-after: avoid;
+}}
+/* text-transform is reset explicitly: the base stylesheet upper-cases h3, which
+   turned "2.1.1 WebMD Symptom Checker" into a shout. */
+h3 {{
+  font-size: 12pt; font-weight: bold; margin: 12pt 0 5pt; text-align: left;
+  text-transform: none; letter-spacing: normal; color: #000000;
+}}
+p {{ margin: 0 0 9pt; text-indent: 0.4in; }}
+/* A paragraph that only introduces a list, table or figure reads better flush. */
+p:has(+ ul), p:has(+ ol), p:has(+ table), p:has(+ figure) {{ text-indent: 0; }}
+li {{ margin: 0 0 5pt; text-align: justify; }}
+ul, ol {{ margin: 0 0 10pt; padding-left: 0.5in; }}
 a {{ color: var(--usiu-blue-dark); }}
-table {{ border-collapse: collapse; width: 100%; font-size: 10pt; }}
-th {{
-  background: var(--usiu-blue); color: #fff; text-align: left;
-  padding: 6pt 8pt; border: 1px solid var(--usiu-blue);
+code, pre {{ font-family: Consolas, "Courier New", monospace; font-size: 10pt; }}
+pre {{ text-align: left; line-height: 1.35; }}
+
+table {{
+  border-collapse: collapse; width: 100%; font-size: 10.5pt;
+  text-align: left; margin: 6pt 0 4pt;
 }}
-td {{ padding: 6pt 8pt; border: 1px solid #c9d2e4; vertical-align: top; }}
-tbody tr:nth-child(even) td {{ background: #f4f6fb; }}
+th {{
+  background: var(--usiu-blue); color: #ffffff; text-align: left;
+  padding: 5pt 7pt; border: 1px solid var(--usiu-blue); font-weight: bold;
+}}
+td {{ padding: 5pt 7pt; border: 1px solid #9aa7bf; vertical-align: top; text-align: left; }}
+
 figure, img {{ max-width: 100%; }}
 /* One unbreakable block, so a figure is never split from its caption and never
    pushed alone onto a page of its own. */
 .usiu-figure {{
   break-inside: avoid; page-break-inside: avoid;
-  text-align: center; margin: 14pt 0;
+  text-align: center; margin: 12pt 0;
 }}
 .usiu-figure img, .usiu-figure svg {{ max-width: 100%; max-height: 6.2in; height: auto; }}
 .usiu-figure figcaption {{
-  color: var(--usiu-grey); font-size: 9.5pt; font-style: italic;
-  margin-top: 6pt;
+  font-size: 10.5pt; font-style: italic; margin-top: 6pt; text-align: center;
 }}
-/* Figure and table captions: the source writes them as a lone italic line. */
+/* Table captions: the source writes them as a lone italic line. */
 p > em:only-child {{
-  display: block; text-align: center; color: var(--usiu-grey);
-  font-size: 9.5pt; font-style: italic; margin-top: 4pt;
+  display: block; text-align: center; font-size: 10.5pt;
+  font-style: italic; margin-top: 2pt; text-indent: 0;
 }}
 </style>
 """
+
+
+def running_header(meta: dict[str, str]) -> str:
+    """`COURSE | Author | Project`, as the reference report heads every page."""
+    short = meta.get("short_title") or meta.get("project", "")
+    return " | ".join(x for x in [meta.get("course_code", ""), meta.get("student", ""), short] if x)
 
 
 def run_make_pdf(binary: str, src: Path, out: Path, meta: dict[str, str], fmt: str) -> None:
@@ -565,10 +575,14 @@ def run_make_pdf(binary: str, src: Path, out: Path, meta: dict[str, str], fmt: s
         "--no-chapter-breaks",
         "--no-confidential",
         "--quiet",
-        # Sets the running header on every page after the cover. Without it the
-        # header inherits the first heading ("1. Introduction") and then stays
-        # stale for the rest of the document.
-        "--title", meta["title"],
+        # The running header names the course, the author and the project, the
+        # way the reference report does. Without an explicit title it would
+        # inherit the first heading and then stay stale for the whole document.
+        "--title", running_header(meta),
+        # A bare centred page number, rather than make-pdf's "N of M".
+        "--footer-template",
+        '<div style="width:100%;text-align:center;font-family:\'Times New Roman\',Times,serif;'
+        'font-size:10pt;color:#000;"><span class="pageNumber"></span></div>',
     ]
     proc = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace")
     if proc.returncode != 0:
@@ -677,7 +691,11 @@ def build_one(
     meta, body = split_front_matter(source.read_text(encoding="utf-8"))
     check_images(body, source)
     headings = extract_headings(body)
-    body_html = fold_figures(rewrite_headings(body, headings), source, variant)
+    body_html = fold_figures(
+        rewrite_headings(body, headings, meta.get("page_break_sections") == "true"),
+        source,
+        variant,
+    )
     BUILD_DIR.mkdir(parents=True, exist_ok=True)
     stem = source.stem if variant == "original" else f"{source.stem}-alt-diagrams"
 
