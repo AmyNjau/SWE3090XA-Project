@@ -119,7 +119,7 @@
   <div class="stat"><span class="n">9</span><span class="l">specialist types</span></div>
   <div class="stat"><span class="n">5</span><span class="l">API endpoints</span></div>
   <div class="stat"><span class="n">25</span><span class="l">tests, all passing</span></div>
-  <div class="stat"><span class="n">12/12</span><span class="l">test cases ranked right</span></div>
+  <div class="stat"><span class="n">12/12</span><span class="l">test cases ranked right<br>(12 of the 15)</span></div>
 </div>
 
 <h2>The three layers</h2>
@@ -135,6 +135,7 @@
 <h2>The demo — in order</h2>
 <div class="steps">
   <p><b>Before they arrive:</b> backend running (terminal visible), emulator open, signed in, and run <code>adb emu geo fix 36.8028 -1.2641</code>.</p>
+  <p style="color:#B3261E"><b>If sign-in fails:</b> tap <b>Continue without an account</b>. The whole demo works without signing in.</p>
   <ol>
     <li>Home screen</li>
     <li><b>Check</b> tab</li>
@@ -150,13 +151,13 @@
 <h2>The 8 answers that cover most questions</h2>
 
 <div class="qa"><span class="q">Is it a medical device?</span>
-<p>"No. It's guidance, not diagnosis. Every single response carries a disclaimer, and that's set in one config file so no part of the code can forget it."</p></div>
+<p>"No. It's guidance, not diagnosis. The disclaimer text sits in one config file, it's attached to every diagnosis response in one place in the code, and the app shows a banner on every screen with results."</p></div>
 
 <div class="qa"><span class="q">Are the medical rules verified by a doctor?</span>
 <p>"No, and I say so in the report. I curated them from public sources. Clinical review is the first thing needed before real use. That's the weakest part of the system and I know it."</p></div>
 
 <div class="qa"><span class="q">How accurate is it?</span>
-<p>"I ran 12 test cases, one per illness. It ranked the right one first every time. But I wrote those cases against my own rules — so it proves the maths works, not that the medicine is right."</p></div>
+<p>"I ran 12 test cases, covering 12 of the 15 illnesses. It ranked the right one first every time. But I wrote those cases against my own rules — so it proves the maths works, not that the medicine is right."</p></div>
 
 <div class="qa"><span class="q">What if someone gets hurt by a wrong answer?</span>
 <p>"That shaped the design. It shows a ranked list, not a verdict. It shows the reasoning. It flags severity. It always sends you to a real doctor. And it says on every screen that it's guidance only."</p></div>
@@ -173,11 +174,34 @@
 <div class="qa"><span class="q">Did you write this code?</span>
 <p>"Yes — open any file and I'll walk you through it." <em>(Have ready: why the phone holds no logic; why the engine is a pure function; why a token is checked even when sign-in is optional.)</em></p></div>
 
+
+<h2>"Did you actually write this?"</h2>
+<div class="warnbox">
+  Don't recite code. <b>Explain why you chose it, and what you rejected.</b> That's what only the author can do.
+</div>
+<div class="box">
+  <p><b>Offer these three files yourself</b> — you know exactly why each is like that:</p>
+  <ol>
+    <li><b>The scoring engine.</b> "It adds up weights and divides. It takes the illness list as an argument instead of loading the file itself — that's what makes it testable without a database."</li>
+    <li><b>The app startup file.</b> "Building the app is separate from starting the server, so tests can run the app without grabbing port 3000."</li>
+    <li><b>The sign-in check.</b> "If a token is sent, it's always checked — even when sign-in is optional. Otherwise a fake token would sail through."</li>
+  </ol>
+</div>
+<div class="qa"><span class="q">Why do you round the score on the server?</span>
+<p>"So every screen shows the same number. If the phone rounded it, one screen could say 54.99% and another 55%."</p></div>
+<div class="qa"><span class="q">Why does the phone hold no medical logic?</span>
+<p>"So I can fix a wrong rule on the server without publishing a new app — and so the Google Maps key never leaves the server."</p></div>
+<div class="qa"><span class="q">Tell me a bug you fixed.</span>
+<p>"Sign-in rejected every valid login because the server had no project ID set, so it couldn't check the token. It looked like a wrong password. Now it fails with a clear server error naming the missing setting instead of blaming the user."</p></div>
+<div class="qa"><span class="q">What does this line do? <i>(something you don't recognise)</i></span>
+<p>"That's generated Flutter/Android scaffolding, not code I wrote. Mine is in <code>lib/</code> and <code>backend/src/</code>." <b>Never guess at generated files.</b></p></div>
+
 <h2>If something breaks</h2>
 <div class="box">
   <p><b>App can't reach server</b> → check the backend terminal. Say: <em>"That's the error handling working — it shows a message and a retry instead of crashing."</em></p>
   <p><b>Nearby doctors spinning</b> → run <code>adb emu geo fix 36.8028 -1.2641</code>. Say: <em>"It falls back to a default location by design, so it never blocks."</em></p>
   <p><b>Emulator dies</b> → use the screenshots in the deck and keep talking.</p>
+  <p><b>Sign-in won't work</b> → tap <b>Continue without an account</b> and carry on.</p>
   <p><b>Asked for something you didn't build</b> → <em>"That's not implemented. It's in my roadmap, and here's how I'd approach it."</em> Never invent a feature.</p>
 </div>
 

@@ -7,7 +7,12 @@ import '../theme/app_theme.dart';
 /// nearly identical and a toggle keeps the user out of a navigation dead end.
 class SignInScreen extends StatefulWidget {
   final AuthService auth;
-  const SignInScreen({super.key, required this.auth});
+
+  /// Lets the user proceed without an account. Present so that a sign-in
+  /// outage never leaves the app with nowhere to go.
+  final VoidCallback? onContinueAsGuest;
+
+  const SignInScreen({super.key, required this.auth, this.onContinueAsGuest});
 
   @override
   State<SignInScreen> createState() => _SignInScreenState();
@@ -211,6 +216,11 @@ class _SignInScreenState extends State<SignInScreen> {
                             : 'New here? Create an account',
                       ),
                     ),
+                    if (widget.onContinueAsGuest != null)
+                      TextButton(
+                        onPressed: _busy ? null : widget.onContinueAsGuest,
+                        child: const Text('Continue without an account'),
+                      ),
                     const SizedBox(height: 18),
                     const Text(
                       'Smart Health offers guidance only and is not a substitute '

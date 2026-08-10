@@ -13,14 +13,26 @@ import 'sign_in_screen.dart';
 /// successful sign-in means a token expiring or a sign-out from anywhere else
 /// lands the user back on the sign-in screen without any screen having to
 /// coordinate it.
-class AuthGate extends StatelessWidget {
+class AuthGate extends StatefulWidget {
   final ApiService api;
   final AuthService auth;
 
   const AuthGate({super.key, required this.api, required this.auth});
 
   @override
+  State<AuthGate> createState() => _AuthGateState();
+}
+
+class _AuthGateState extends State<AuthGate> {
+  /// Set when the user chooses to continue without an account. The backend
+  /// serves anonymous requests unless AUTH_REQUIRED is on, so this keeps the
+  /// app usable if sign-in is unavailable.
+  bool _guest = false;
+
+  @override
   Widget build(BuildContext context) {
+    final auth = widget.auth;
+    final api = widget.api;
     return StreamBuilder<User?>(
       stream: auth.authStateChanges,
       builder: (context, snapshot) {
@@ -33,8 +45,11 @@ class AuthGate extends StatelessWidget {
         // somebody else never shows the previous account's symptom checks.
         HistoryStore.instance.setUser(user?.uid);
 
-        if (user == null) {
-          return SignInScreen(auth: auth);
+        if (user == null && !_guest) {
+          return SignInScreen(
+            auth: auth,
+            onContinueAsGuest: () => setState(() => _guest = true),
+          );
         }
         return MainShell(api: api, auth: auth);
       },

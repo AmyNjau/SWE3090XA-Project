@@ -222,9 +222,10 @@ Three limitations are stated plainly here and revisited in Section 7.3. First,
 the knowledge base is an educational rule set curated for this project and has
 not been clinically validated; the application is a guidance tool and not a
 medical device. Second, the query log is held in memory and is therefore lost
-when the server restarts. Third, the deployed prototype has no user
-authentication, so query history is held in memory in the app rather than being
-persisted or tied to an account, and is lost when the application closes.
+when the server restarts. Third, authentication was added late in the project: users sign in with email
+and password, and the API verifies their token, but query history is still held
+in memory in the app rather than persisted, so it is lost when the application
+closes.
 
 # Chapter Two: Literature Review
 
@@ -840,7 +841,7 @@ evidence that the functional and reliability requirements are met.
 
 The automated suite verifies that scoring is arithmetically correct, but not
 that the ranking is useful. To assess that, twelve symptom vignettes were
-constructed, one per condition, each listing the symptoms a person with that
+constructed, covering twelve of the fifteen conditions, each listing the symptoms a person with that
 condition would plausibly report. Each vignette was passed through the engine
 and the rank of the expected condition was recorded.
 
@@ -947,8 +948,10 @@ accuracy.
 The query log is held in memory and does not survive a restart; the Firestore
 implementation remains a documented stub.
 
-The prototype has no authentication, and query history is held in memory in the
-app rather than persisted, so it is lost when the application is closed.
+Authentication is implemented with Firebase email and password sign-in, and the
+API verifies each caller's ID token, but query history is still held in memory
+in the app rather than persisted, so it is lost when the application is closed.
+Making history durable requires the Firestore store above.
 
 Transport is not yet encrypted. The development build talks to the backend over
 plain HTTP, and HTTPS with certificate validation is required before any
@@ -997,10 +1000,10 @@ and bound the in-memory cache and query log. Next, implement the Firestore data
 store against the existing interface so the query log survives restarts, and
 wire live Maps credentials while keeping the key server-side. Clinical review of
 the knowledge base by a qualified practitioner should precede any real use, and
-the reviewer and date should be recorded. Beyond that, adding authentication
-would make history per-user, a continuous-integration pipeline would validate
-every change automatically, and multilingual and offline support would extend
-reach in the target context.
+the reviewer and date should be recorded. Beyond that, persisting the query log
+would make history durable across devices now that sign-in identifies the user,
+a continuous-integration pipeline would validate every change automatically, and
+multilingual and offline support would extend reach in the target context.
 
 ## 8.3 Closing Remarks
 

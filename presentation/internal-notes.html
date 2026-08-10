@@ -120,6 +120,7 @@
   <a href="#testing">Testing Q&amp;A</a>
   <a href="#mobile">Mobile Q&amp;A</a>
   <a href="#kill">Hard questions</a>
+  <a href="#prove">Did you code it?</a>
   <a href="#rescue">If it breaks</a>
 </nav>
 
@@ -177,7 +178,7 @@ flutter run -d emulator-5554 --dart-define=API_BASE_URL=http://10.0.2.2:3000</co
 <tr><td>Max ranked results</td><td>5</td><td><code>config/index.js</code></td></tr>
 <tr><td>Provider cache TTL</td><td>5 minutes</td><td><code>providerService.js</code></td></tr>
 <tr><td>Default search radius</td><td>5&nbsp;000 m</td><td><code>config/index.js</code></td></tr>
-<tr><td>Vignette evaluation</td><td>12/12 ranked first</td><td>Report §6.4</td></tr>
+<tr><td>Vignette evaluation</td><td>12/12 ranked first (12 of 15 conditions)</td><td>Report §6.4</td></tr>
 </table></div>
 
 <div class="okbox">
@@ -211,7 +212,7 @@ flutter run -d emulator-5554 --dart-define=API_BASE_URL=http://10.0.2.2:3000</co
 
 <div class="card">
 <h3>7. Security &amp; safety</h3>
-<p>Maps key server-side only; request validation before processing; the error handler never leaks internals; the disclaimer is attached centrally in config so no endpoint can forget it; location is read only after explicit permission and denial is a supported path.</p>
+<p>Maps key server-side only; request validation before processing; the error handler never leaks internals; the disclaimer text lives in config and is attached in one place in the diagnosis service, so every diagnosis response carries it, and the client renders a banner on every results screen; location is read only after explicit permission and denial is a supported path.</p>
 <div class="say">I want to be straight about what is not done: there is no TLS on the development build, no rate limiting and no security headers yet. Those are written up as concrete work items, not discovered on the day.</div>
 </div>
 
@@ -254,7 +255,7 @@ flutter run -d emulator-5554 --dart-define=API_BASE_URL=http://10.0.2.2:3000</co
 <p>No, and the report says so. It is a stub that throws in its constructor with a message telling you to set <code>DATA_STORE=local</code> or implement it. The interface is real and matched; the implementation is the next data-tier task. I would rather ship an honest stub than a half-working store that loses queries.</p></div>
 
 <div class="q"><span class="ask">Where does configuration live?</span>
-<p>Every environment read is in <code>config/index.js</code> — port, data store, provider source, Maps key, auth settings, engine thresholds, and the disclaimer text. One file to audit. Nothing else in the codebase reads <code>process.env</code>.</p></div>
+<p>Every environment read is in <code>config/index.js</code> — port, data store, provider source, Maps key, auth settings, engine thresholds, and the disclaimer text. One file to audit. Nothing else in <code>src/</code> reads <code>process.env</code>.</p></div>
 
 <h2 id="engine">The rule engine — expect the most questions here</h2>
 
@@ -298,7 +299,7 @@ flutter run -d emulator-5554 --dart-define=API_BASE_URL=http://10.0.2.2:3000</co
 <p>Input is de-duplicated with a <code>Set</code> before scoring, so a duplicate cannot inflate a score. Also a named test.</p></div>
 
 <div class="q"><span class="ask">How accurate is it?</span>
-<p>I ran 12 symptom vignettes, one per condition, through the real engine: the expected condition ranked first in 12 of 12. I am careful about what that means — I wrote the vignettes against the same knowledge base, so it measures internal consistency, not clinical accuracy. It proves the weighting and ranking behave as designed. Only clinical review proves the rules are right.</p></div>
+<p>I ran 12 symptom vignettes, covering twelve of the fifteen conditions, through the real engine: the expected condition ranked first in 12 of 12. I am careful about what that means — I wrote the vignettes against the same knowledge base, so it measures internal consistency, not clinical accuracy. It proves the weighting and ranking behave as designed. Only clinical review proves the rules are right.</p></div>
 
 <h2 id="api">The API surface</h2>
 
@@ -324,7 +325,7 @@ flutter run -d emulator-5554 --dart-define=API_BASE_URL=http://10.0.2.2:3000</co
 <p>Great-circle distance on a sphere. At city scale it is accurate to well within the error of a phone's GPS fix, and it needs no external call. Road distance would be better for a user but requires a Directions request per provider, which is billable and slow.</p></div>
 
 <div class="q"><span class="ask">Why cache provider lookups?</span>
-<p>Cost and latency. Maps Nearby Search is billed per call, and two users in the same area asking for the same specialty want the same answer. A five-minute TTL keyed on specialist plus rounded coordinates cuts repeat calls without serving stale results.</p>
+<p>Cost and latency. Maps Nearby Search is billed per call, and two users in the same area asking for the same specialty want the same answer. A five-minute TTL keyed on specialist, rounded coordinates and radius cuts repeat calls without serving stale results.</p>
 <p><strong>Known gap:</strong> the cache is an unbounded <code>Map</code> with no eviction, so it grows. Adding a size cap is on the list.</p></div>
 
 <div class="q"><span class="ask">What happens if the user denies location?</span>
@@ -397,7 +398,7 @@ flutter run -d emulator-5554 --dart-define=API_BASE_URL=http://10.0.2.2:3000</co
 <h2 id="kill">The hard ones</h2>
 
 <div class="q kill"><span class="ask">Is this a medical device?</span>
-<p>No, and I have been careful not to build one. It offers guidance, not diagnosis. The disclaimer is attached centrally in configuration so no response path can omit it, and it appears on every result screen. A medical device would need clinical validation, a regulatory pathway and a quality system — none of which this has, which is precisely why the language throughout is "probable conditions" and "guidance".</p></div>
+<p>No, and I have been careful not to build one. It offers guidance, not diagnosis. The disclaimer text lives in one configuration value and is attached in a single place in the diagnosis service, so every diagnosis response carries it, and the client renders a banner on every screen that shows results. A medical device would need clinical validation, a regulatory pathway and a quality system — none of which this has, which is precisely why the language throughout is "probable conditions" and "guidance".</p></div>
 
 <div class="q kill"><span class="ask">What if someone acts on a wrong answer and is harmed?</span>
 <p>That is the risk that shaped the design. The mitigations are: ranked probabilities rather than a single verdict, the reasoning shown so the user can judge it, severity carried through so high-severity conditions are emphasised, a disclaimer that cannot be forgotten, and routing to a human specialist as the recommended action. The tool's job is to get someone to the right clinician sooner, not to replace one. The residual risk is why clinical validation is the first recommendation.</p></div>
@@ -417,6 +418,58 @@ flutter run -d emulator-5554 --dart-define=API_BASE_URL=http://10.0.2.2:3000</co
 <div class="q kill"><span class="ask">Did you write this code?</span>
 <p>Yes — and be ready to prove it by opening any file they name and explaining a design decision in it. Good ones to offer: why <code>hasOwnProperty.call</code> is in the scoring loop, why <code>createApp()</code> is separate from <code>server.js</code>, and why a supplied token is verified even when auth is optional.</p></div>
 
+<h2 id="prove">"Did you really write this?" — proving authorship</h2>
+
+<div class="warnbox">
+This lecturer probes code. The way to win it is not to recite lines — it is to explain <strong>why a decision was made and what the alternative was</strong>. Anyone can read code aloud; only the author knows what they rejected. Offer to open files yourself.
+</div>
+
+<div class="q"><span class="ask">Open any file and explain it.</span>
+<p>Offer these three first — you know exactly why each is the way it is:</p>
+<ul>
+  <li><code>backend/src/services/diagnosisEngine.js</code> — the scoring loop and the <code>hasOwnProperty</code> guard.</li>
+  <li><code>backend/src/app.js</code> — why <code>createApp()</code> does not bind a port.</li>
+  <li><code>backend/src/middleware/auth.js</code> — why a supplied token is verified even when auth is optional.</li>
+</ul></div>
+
+<div class="q"><span class="ask">Why is there a <code>reduce</code> on line one of <code>scoreCondition</code>?</span>
+<p>It computes the condition's maximum possible weight — the denominator. It is computed per call rather than stored in the JSON so the knowledge base has no derived data in it; adding a symptom to a condition cannot leave a stale total behind. The cost is trivial because a condition has under ten symptoms.</p></div>
+
+<div class="q"><span class="ask">Why does <code>diagnose()</code> take <code>conditions</code> as an argument instead of importing the knowledge base?</span>
+<p>So the engine has no dependency on where data comes from. That is what makes it a pure function and what lets the unit tests pass in three hand-written conditions instead of loading the real file. It also means switching the data store to Firestore needs no change to the engine at all.</p></div>
+
+<div class="q"><span class="ask">Why <code>+(score * 100).toFixed(1)</code> rather than returning the raw 0–1 score?</span>
+<p>Two reasons. The UI shows a percentage, and doing the rounding once on the server means the client cannot render 54.99% on one screen and 55% on another. The leading <code>+</code> converts <code>toFixed</code>'s string back to a number, so the API returns a number and not a string.</p></div>
+
+<div class="q"><span class="ask">Why is the filter <code>confidence >= threshold * 100</code> and not <code>score >= threshold</code>?</span>
+<p>Because by that point the score has already been converted to a percentage and rounded. Comparing the rounded value is what makes the threshold mean exactly what the user sees; comparing the raw score could include a condition that then displays as below the threshold.</p></div>
+
+<div class="q"><span class="ask">Why <code>matchedSymptoms.length &gt; 0</code> in the filter as well?</span>
+<p>Defensive. A condition with an empty symptom map would score 0 and be filtered anyway, but if a threshold of 0 were ever configured, a condition matching nothing could otherwise appear in the results with no explanation attached. The explainability promise is that every result names its reasons, so a result with no reasons must never be returned.</p></div>
+
+<div class="q"><span class="ask">Why is the symptom-name lookup a <code>Map</code> rather than <code>find()</code>?</span>
+<p><code>find()</code> inside the result loop would be a scan per matched symptom. Building the id-to-name map once is one pass over the catalogue and then constant-time lookups. With 35 symptoms it does not matter for speed; it matters because it is the shape that stays correct when the catalogue grows.</p></div>
+
+<div class="q"><span class="ask">Why does the client have <code>_get</code> and <code>_post</code> private helpers?</span>
+<p>So error handling exists in one place. Every call funnels through <code>_decode</code>, which turns any non-2xx into an <code>ApiException</code> carrying a message the UI can show. Without it, each screen would invent its own error handling and some would forget.</p></div>
+
+<div class="q"><span class="ask">Why is <code>tokenProvider</code> a function rather than the auth service itself?</span>
+<p>So <code>ApiService</code> never imports Firebase. It takes a callback that returns a token, which means the tests can pass a plain function and the class stays independent of the auth implementation. It also means a refreshed token is picked up automatically, because the callback runs per request rather than the token being captured once.</p></div>
+
+<div class="q"><span class="ask">Why is <code>HistoryStore</code> a map keyed by uid instead of being cleared on sign-out?</span>
+<p>Clearing would lose the previous account's entries permanently, so signing back in would show nothing. Keying by uid means each account keeps its own list for the session and no account can ever see another's. It is also the shape that maps directly onto a per-user Firestore collection later.</p></div>
+
+<div class="q"><span class="ask">Show me a bug you found and fixed.</span>
+<p>Good honest answers, all real:</p>
+<ul>
+  <li>Figures in the report were being separated from their captions across a page break, leaving two near-blank pages. Fixed by binding image and caption into one unbreakable block.</li>
+  <li>The report's contents page numbers could be silently wrong when a heading's text also appeared as a body line. Fixed by matching whole lines and refusing to number ambiguous headings.</li>
+  <li>Sign-in returned 401 for every valid token because the project id was unset, so the Admin SDK could not validate the audience. Now the server fails with a 500 that names the missing variable instead of blaming the caller.</li>
+</ul></div>
+
+<div class="q"><span class="ask">What does this line do? (pointing at something unfamiliar)</span>
+<p>If you genuinely do not recognise it, say: "That is in the generated Android or Flutter scaffolding, not code I wrote — the code I wrote is under <code>lib/</code> and <code>backend/src/</code>." Do not guess at generated files. Knowing which parts are yours is itself evidence of authorship.</p></div>
+
 <h2 id="rescue">If something breaks</h2>
 
 <div class="scroll"><table>
@@ -424,7 +477,7 @@ flutter run -d emulator-5554 --dart-define=API_BASE_URL=http://10.0.2.2:3000</co
 <tr><td>App shows "Could not reach the server"</td><td>Check the backend terminal is running; confirm <code>--dart-define=API_BASE_URL=http://10.0.2.2:3000</code></td><td>"That is the client's error path working — it degrades to a readable message with a retry rather than crashing."</td></tr>
 <tr><td>Nearby Providers spins</td><td><code>adb emu geo fix 36.8028 -1.2641</code></td><td>"It falls back to a default location after a timeout by design, so denial or no fix never blocks the flow."</td></tr>
 <tr><td>Emulator is slow or freezes</td><td>Fall back to the screenshots in the deck</td><td>"Let me walk you through the same flow from the captured screens while that recovers."</td></tr>
-<tr><td>Sign-in fails</td><td>Check the device has network; the backend still runs with <code>AUTH_REQUIRED</code> unset</td><td>"Authentication is enforced by configuration; with it off the API still serves anonymously, which is how the test suite runs."</td></tr>
+<tr><td>Sign-in fails</td><td>Tap <strong>Continue without an account</strong> on the sign-in screen. The whole demo works anonymously.</td><td>"Authentication is enforced by configuration. With it off the API still serves anonymous callers, which is how the test suite runs — so I can show you the full flow either way."</td></tr>
 <tr><td>Asked for something not built</td><td>Do not improvise a feature</td><td>"That is not implemented. It is on the roadmap in the report, and here is how I would approach it."</td></tr>
 </table></div>
 

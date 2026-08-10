@@ -75,6 +75,19 @@ async function verifyIdToken(idToken) {
   }
 
   if (!verifier) {
+    // Without a project id the Admin SDK has nothing to validate the token's
+    // audience against, and every token fails. That is a server
+    // misconfiguration, not a bad credential, so it must not be reported as a
+    // 401 -- doing so makes a deployment mistake indistinguishable from an
+    // attack, and hides the real cause behind "invalid token".
+    if (!config.auth.projectId) {
+      const err = new Error(
+        'FIREBASE_PROJECT_ID is not set, so ID tokens cannot be verified. ' +
+          'Set it in backend/.env (see .env.example).'
+      );
+      err.status = 500;
+      throw err;
+    }
     const admin = initialiseAdmin();
     verifier = (token) => admin.auth(adminApp).verifyIdToken(token);
   }
