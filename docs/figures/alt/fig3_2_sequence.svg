@@ -50,8 +50,8 @@
   <text x="140" y="308" text-anchor="middle" font-size="10.5" fill="#5B6B82">7. conditions + disclaimer</text>
   <!-- 8 -->
   <line x1="65" y1="366" x2="211" y2="366" stroke="#204098" stroke-width="1.5" marker-end="url(#aS)"/>
-  <text x="138" y="360" text-anchor="middle" font-size="10.5" fill="#201820">8. POST /api/providers</text>
-  <text x="138" y="346" text-anchor="middle" font-size="10" fill="#5B6B82">{specialist, lat, lng}</text>
+  <text x="138" y="346" text-anchor="middle" font-size="10.5" fill="#201820">8. POST /api/providers</text>
+  <text x="138" y="359" text-anchor="middle" font-size="10" fill="#5B6B82">{specialist, lat, lng}</text>
   <!-- 9 -->
   <line x1="215" y1="410" x2="651" y2="410" stroke="#204098" stroke-width="1.5" marker-end="url(#aS)"/>
   <text x="432" y="404" text-anchor="middle" font-size="10.5" fill="#201820">9. nearby search (server-side, key never leaves the server)</text>

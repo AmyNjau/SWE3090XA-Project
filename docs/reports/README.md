@@ -142,5 +142,7 @@ the delivered document.
 
 The build exits non-zero on a missing tool, a missing brand asset, a missing or
 remote image, a missing front-matter key, a rejected heading style, a heading it
-cannot locate, an ambiguous heading title, or any change in pagination between
-the two passes. Output is moved into `build/` only after all of that passes.
+cannot locate, an ambiguous heading title, an alternative figure that is not
+well-formed SVG, an alternative figure whose image has no caption, or
+contents-page numbering that has not settled after five passes. Output is moved
+into `build/` only after all of that passes.

@@ -12,6 +12,59 @@ date: August 2026
 semester: Summer Semester 2026
 ---
 
+# Declaration
+
+I, Amy Wanjugu Njau, registration number 669008, declare that this report is my
+own original work and that it has not been submitted, in whole or in part, for
+any other award at this or any other university. All sources consulted have been
+acknowledged in the text and listed in the references. Where the work of others
+has been used, it is cited accordingly.
+
+The application described in this report is a guidance tool developed for
+academic purposes. Its knowledge base has not been clinically validated and it
+is not a medical device.
+
+<div style="margin-top:26pt">Signature: ......................................... &nbsp;&nbsp;&nbsp; Date: .........................................</div>
+
+<div style="margin-top:20pt">Amy Wanjugu Njau (669008)</div>
+
+<div style="margin-top:30pt"><strong>Supervisor's approval</strong></div>
+
+This report has been submitted for examination with my approval as the
+university supervisor.
+
+<div style="margin-top:26pt">Signature: ......................................... &nbsp;&nbsp;&nbsp; Date: .........................................</div>
+
+<div style="margin-top:20pt">Mr Fredrick Ogore</div>
+
+# Acknowledgement
+
+I thank my supervisor, Mr Fredrick Ogore, for his guidance and feedback
+throughout this project, and the faculty of the School of Science and Technology
+at USIU-Africa for the grounding that made the work possible. I am grateful to
+my family and colleagues for their encouragement over the course of the
+semester.
+
+# Acronyms and Definitions
+
+| Term | Meaning |
+|---|---|
+| API | Application Programming Interface, the contract through which the client and server exchange data |
+| DFD | Data Flow Diagram |
+| ERD | Entity Relationship Diagram |
+| HTTPS | Hypertext Transfer Protocol Secure, HTTP carried over an encrypted connection |
+| JSON | JavaScript Object Notation, the data-interchange format used by the API |
+| Knowledge base | The declarative set of conditions and their weighted symptoms that the engine scores against |
+| mHealth | Mobile health, the delivery of health services and information via mobile devices |
+| REST | Representational State Transfer, the architectural style of the API |
+| Rule-based engine | Inference that applies explicit, human-readable rules rather than a learned model |
+| Specialist routing | Mapping a probable condition to the type of practitioner who treats it |
+| Top-1 hit rate | The proportion of test cases where the expected condition is ranked first |
+| UAT | User Acceptance Testing |
+
+**Keywords:** mHealth, symptom checker, rule-based inference, explainable
+systems, specialist recommendation, geolocation, Flutter, REST API.
+
 # Abstract
 
 Access to timely medical guidance remains constrained in many developing
@@ -49,18 +102,21 @@ persistence work required before any real-world deployment.
 
 Access to timely and accurate medical guidance remains a major challenge across
 many parts of the world, and particularly in developing regions where the ratio
-of doctors to patients is critically low. Large populations in low- and
-middle-income countries continue to face shortages of healthcare workers, long
-travel distances to facilities, and high out-of-pocket consultation costs. As a
-result, many individuals delay seeking professional medical attention, not
-because they are unwilling, but because they are uncertain about the severity of
-their symptoms or do not know which type of practitioner to consult.
+of doctors to patients is critically low. According to the World Health
+Organization (2023), large populations in low- and middle-income countries
+continue to face shortages of healthcare workers, long travel distances to
+facilities, and high out-of-pocket consultation costs. As a result, many
+individuals delay seeking professional medical attention, not because they are
+unwilling, but because they are uncertain about the severity of their symptoms
+or do not know which type of practitioner to consult.
 
 At the same time, mobile-phone penetration in these regions has grown rapidly,
 placing internet-connected devices in the hands of populations that were
 previously difficult to reach through conventional healthcare infrastructure.
 This convergence creates a meaningful opportunity for mobile health solutions to
-bridge part of the gap between symptom onset and appropriate care.
+bridge part of the gap between symptom onset and appropriate care, an approach
+the World Health Organization (2021) sets out as a priority in its global
+strategy on digital health.
 
 The Smart Health Symptom Checker and Doctor Recommendation System responds to
 this opportunity by providing a digital-first tool that helps users make
@@ -166,7 +222,8 @@ the knowledge base is an educational rule set curated for this project and has
 not been clinically validated; the application is a guidance tool and not a
 medical device. Second, the query log is held in memory and is therefore lost
 when the server restarts. Third, the deployed prototype has no user
-authentication, so history is device-local rather than per-account.
+authentication, so query history is held in memory in the app rather than being
+persisted or tied to an account, and is lost when the application closes.
 
 # Chapter Two: Literature Review
 
@@ -179,15 +236,15 @@ system.
 
 ### 2.1.1 WebMD Symptom Checker
 
-WebMD provides a widely used web-based symptom checker that allows users to
-select symptoms on a body map and returns a list of possible conditions with
+WebMD (2024) provides a widely used web-based symptom checker that allows users
+to select symptoms on a body map and returns a list of possible conditions with
 accompanying articles. It is information-rich but primarily an educational
 reference; it does not connect users to specific local practitioners and is
 oriented toward a North American audience and healthcare context.
 
 ### 2.1.2 Ada Health
 
-Ada is a mobile symptom-assessment application that conducts a structured,
+Ada Health (2024) is a mobile symptom-assessment application that conducts a structured,
 conversational interview and returns possible causes together with guidance on
 next steps. It is well designed and clinically informed, but it is built
 primarily for connected, higher-income markets, does not focus on surfacing
@@ -196,14 +253,14 @@ the end user.
 
 ### 2.1.3 Babylon Health
 
-Babylon combined symptom checking with telemedicine consultations, allowing
+Babylon Health (2023) combined symptom checking with telemedicine consultations, allowing
 users to speak with clinicians remotely. While powerful, it depends on reliable
 connectivity, an available clinician network, and a subscription or payment
 model, which limits its accessibility in low-resource settings.
 
 ### 2.1.4 Buoy Health and K Health
 
-Buoy Health and K Health both use data-driven approaches to triage symptoms and
+Buoy Health (2024) and K Health (2024) both use data-driven approaches to triage symptoms and
 suggest next steps, with K Health additionally drawing on large clinical
 datasets. These tools illustrate the value of structured triage but, like the
 others, are tailored to specific national healthcare systems and do not provide
@@ -212,8 +269,12 @@ localised facility recommendation for developing-region users.
 ### 2.1.5 Academic Evaluations
 
 Independent academic audits of symptom checkers, notably the BMJ audit study by
-Semigran and colleagues (2015), found that the diagnostic and triage accuracy of
-these tools varies considerably. That body of work underpins two design
+Semigran et al. (2015), found that the diagnostic and triage accuracy of these
+tools varies considerably. Later work reached similar conclusions: Chambers et
+al. (2019) reviewed digital and online symptom checkers used for urgent care and
+reported wide variation in accuracy and safety, while Wallace et al. (2022)
+found diagnostic accuracy in symptom checkers to remain inconsistent across
+conditions. That body of work underpins two design
 principles adopted here: such tools should be positioned explicitly as guidance
 rather than diagnosis, and an explainable, well-validated rule base is
 preferable to an opaque one in a safety-sensitive domain.
@@ -229,7 +290,7 @@ capabilities targeted by this project.
 | Ada Health | Yes | Partial | No | No | No |
 | Babylon Health | Yes | Yes, via clinician | Partial | No | No |
 | Buoy Health / K Health | Yes | Partial | No | No | No |
-| **Smart Health (this project)** | **Yes** | **Yes** | **Yes** | **Yes** | **Yes** |
+| **Smart Health (this project)** | **Yes** | **Yes** | **Yes** | **Yes** | **Partial** |
 
 *Table 2.1: Comparative analysis of existing symptom-checker systems.*
 
@@ -350,9 +411,14 @@ typed models. All reasoning lives behind the API boundary, which keeps the
 client thin, makes the engine independently testable, and allows the rule base
 to be corrected without shipping a new app version.
 
-![Three-tier integration architecture of the system](../figures/fig3_1_architecture.png)
+![Three-tier architecture of the delivered system](../figures/fig4_1_architecture_delivered.png)
 
-*Figure 4.1: High-level system architecture.*
+*Figure 4.1: High-level architecture of the delivered system.*
+
+This figure describes the system as delivered, in which the data tier is the
+file-backed local store. The Firestore implementation exists as a documented
+stub behind the same interface and is not active; Section 7.3 records this, and
+Section 8.2 lists completing it as the next data-tier task.
 
 ## 4.2 Context Diagram
 
@@ -510,13 +576,18 @@ The end-to-end exchange is shown in Figure 4.5.
 
 ## 4.6 Security and Privacy Design
 
-Four measures were designed in rather than added afterwards. All client-server
-traffic is intended to travel over HTTPS. The Google Maps Platform key is held
-server-side in environment variables and is never exposed to the client, which
-is why every Maps call is made by the backend rather than the app. Request
-bodies are validated before processing, and malformed requests are rejected with
-a 400 status and a clear message. The error handler never leaks internal detail
-on a server error.
+Three measures are implemented in the delivered system. The Google Maps Platform
+key is held server-side in environment variables and is never exposed to the
+client, which is why every Maps call is made by the backend rather than the app.
+Request bodies are validated before processing, and malformed requests are
+rejected with a 400 status and a clear message. The error handler never leaks
+internal detail on a server error.
+
+Transport security is a design requirement that the prototype does not yet meet.
+The architecture assumes HTTPS between client and server, but the development
+build communicates over plain HTTP against a local backend, so TLS termination
+remains a deployment task rather than a delivered feature. It is recorded as
+such in Section 7.3 rather than presented as done.
 
 Data minimisation is applied to the query log: it records the symptom set and
 the outcome for analytics but is not tied to an identified person in the
@@ -541,11 +612,12 @@ input and output so that it can be tested directly.
 | `src/services/diagnosisEngine.js` | Pure scoring logic, no input or output |
 | `src/services/diagnosisService.js` | Orchestrates engine, specialist lookup, query log, disclaimer |
 | `src/services/providerService.js` | Mock and Google provider lookup with a cache |
-| `src/routes/` | The five HTTP endpoints |
+| `src/routes/` | The diagnose, providers and catalogue endpoints |
 | `src/middleware/validate.js` | Request-body validation returning 400 responses |
 | `src/repositories/` | Data-store factory, local and Firestore implementations |
 | `src/data/` | Knowledge base, symptoms, specialists, providers |
 | `src/config/index.js` | All environment reads and the central disclaimer |
+| `src/app.js` | Wires the routers together and serves `GET /api/health` |
 
 *Table 5.1: Backend codebase structure.*
 
@@ -636,8 +708,9 @@ router.post('/', validateDiagnoseBody, async (req, res, next) => {
 The provider service supports two interchangeable sources selected by
 configuration. The mock source ranks the bundled provider records by haversine
 distance from the user. The Google source queries the Maps Platform Nearby
-Search server-side using the specialist's search keywords, and caches responses
-for a configured period to contain both latency and billing. Because both
+Search server-side using the specialist's search keywords (Google Developers,
+2024), and caches responses for a configured period to contain both latency and
+billing. Because both
 sources satisfy the same interface, neither the routes nor the client change
 when the source is switched.
 
@@ -650,17 +723,27 @@ screen lists nearby practices with a working directions action. A single service
 class is the only point of contact with the API.
 
 ```dart
+/// POST /api/diagnose -> ranked conditions + specialist + disclaimer.
 Future<DiagnosisResult> getDiagnosis(List<String> symptoms) async {
-  final response = await http.post(
-    Uri.parse('$baseUrl/api/diagnose'),
-    headers: {'Content-Type': 'application/json'},
-    body: jsonEncode({'symptoms': symptoms}),
-  );
-  if (response.statusCode == 200) {
-    return DiagnosisResult.fromJson(jsonDecode(response.body));
-  } else {
-    throw Exception('Diagnosis request failed: ${response.statusCode}');
+  final res = await _post('/api/diagnose', {'symptoms': symptoms});
+  return DiagnosisResult.fromJson(res);
+}
+```
+
+Error handling is centralised in the private helpers rather than repeated at
+each call site, which is what allows the interface to show a readable message
+with a retry action instead of crashing when the backend is unreachable.
+
+```dart
+Map<String, dynamic> _decode(http.Response res) {
+  final decoded = res.body.isNotEmpty
+      ? jsonDecode(res.body) as Map<String, dynamic>
+      : <String, dynamic>{};
+  if (res.statusCode >= 200 && res.statusCode < 300) {
+    return decoded;
   }
+  final message = decoded['error']?.toString() ?? 'Request failed (${res.statusCode}).';
+  throw ApiException(message);
 }
 ```
 
@@ -752,7 +835,43 @@ evidence that the functional and reliability requirements are met.
 
 *Table 6.2: Acceptance test cases.*
 
-## 6.4 Non-Functional Verification
+## 6.4 Ranking Evaluation
+
+The automated suite verifies that scoring is arithmetically correct, but not
+that the ranking is useful. To assess that, twelve symptom vignettes were
+constructed, one per condition, each listing the symptoms a person with that
+condition would plausibly report. Each vignette was passed through the engine
+and the rank of the expected condition was recorded.
+
+| Vignette (expected condition) | Symptoms | Engine's top result | Confidence | Rank of expected |
+|---|---|---|---|---|
+| Malaria | 4 | Malaria | 70.0% | 1 |
+| Common Cold | 4 | Common Cold | 76.3% | 1 |
+| Influenza | 5 | Influenza (Flu) | 77.3% | 1 |
+| COVID-19 | 4 | COVID-19 | 67.4% | 1 |
+| Migraine | 3 | Migraine | 67.6% | 1 |
+| Gastroenteritis | 4 | Gastroenteritis | 87.9% | 1 |
+| Asthma | 4 | Asthma | 100.0% | 1 |
+| Pneumonia | 4 | Pneumonia | 73.7% | 1 |
+| Urinary tract infection | 3 | Urinary Tract Infection | 88.0% | 1 |
+| Conjunctivitis | 3 | Conjunctivitis (Pink Eye) | 50.0% | 1 |
+| Tonsillitis | 4 | Tonsillitis | 100.0% | 1 |
+| Dengue fever | 5 | Dengue Fever | 87.8% | 1 |
+
+*Table 6.3: Ranking evaluation over twelve symptom vignettes.*
+
+The expected condition ranked first in 12 of 12 vignettes, giving a top-1 and
+top-3 hit rate of 100 per cent on this set.
+
+That number must be read with its limitation stated clearly. The vignettes were
+written by the author from the same knowledge base the engine scores against, so
+this measures the engine's internal consistency, not its clinical accuracy. It
+establishes that the weighting and ranking behave as designed for
+characteristic symptom sets; it does not establish that the rule set is
+medically correct. Only the clinical review recommended in Section 8.2 can do
+that, and until it happens the application remains a guidance tool.
+
+## 6.5 Non-Functional Verification
 
 Reliability is verified directly by the determinism test, which asserts that
 identical input produces identical output. Performance was observed on the
@@ -772,15 +891,25 @@ engine code.
 | Objective | Outcome | Evidence |
 |---|---|---|
 | Mobile app returning ranked conditions | Achieved | Figures 5.2 and 5.3; integration tests |
-| Rule-based diagnostic engine | Achieved | Section 5.3; nine unit tests |
+| Rule-based diagnostic engine | Achieved for internal consistency | Section 5.3; nine unit tests; Table 6.3 |
 | Specialist recommendation module | Achieved | Diagnose response; Table 6.1 |
 | Location-based provider recommendation | Achieved | Figure 5.4; provider tests |
-| Simple, accessible interface | Achieved | Figures 5.1 to 5.5; acceptance tests |
+| Simple interface, accessibility untested | Partially achieved | Figures 5.1 to 5.5; no user testing conducted |
 
 *Table 7.1: Achievement of the specific objectives.*
 
-All five specific objectives, and therefore the main objective, were met by the
-delivered system.
+Four of the five specific objectives were met in full. The second is met in the
+sense the project can evidence: the engine ranks the expected condition first on
+every vignette tested (Table 6.3), but "reasonable accuracy" in the clinical
+sense cannot be claimed without the validation set out in Section 8.2.
+
+The fifth is reported as partially achieved, deliberately. The interface was
+built to the usability requirement and the complete journey was walked
+end to end, but the structured testing with users of varying digital literacy
+that the midterm committed to was not carried out. Screenshots and
+developer-run tests are evidence that the interface works; they are not evidence
+that it is accessible to the intended users. That distinction is preserved here
+rather than glossed over, and the outstanding work is listed in Section 8.2.
 
 ## 7.2 Discussion
 
@@ -807,15 +936,38 @@ consequence of failure became the easiest to test.
 
 ## 7.3 Limitations
 
-Four limitations are stated plainly. The knowledge base is educational and has
-not been reviewed by a qualified clinician, so the system must not be used for
-real medical decisions. The query log is in memory and does not survive a
-restart, so the Firestore implementation remains a documented stub. The
-prototype has no authentication, so history is device-local. And the API,
-assessed against a production bar, still needs security hardening: origin
+Six limitations are stated plainly.
+
+The knowledge base is educational and has not been reviewed by a qualified
+clinician, so the system must not be used for real medical decisions, and the
+evaluation in Section 6.4 measures internal consistency rather than clinical
+accuracy.
+
+The query log is held in memory and does not survive a restart; the Firestore
+implementation remains a documented stub.
+
+The prototype has no authentication, and query history is held in memory in the
+app rather than persisted, so it is lost when the application is closed.
+
+Transport is not yet encrypted. The development build talks to the backend over
+plain HTTP, and HTTPS with certificate validation is required before any
+deployment.
+
+The API, assessed against a production bar, still needs hardening: origin
 restriction, security headers, rate limiting on the unauthenticated endpoints,
 bounds on request payloads, and eviction policies for the in-memory cache and
-log. These are enumerated as concrete work items rather than left implicit.
+log.
+
+Usability was not tested with users. The interface meets the stated usability
+requirement by construction, but the structured testing with participants of
+varying digital literacy promised at midterm was not conducted, so no claim of
+demonstrated accessibility is made.
+
+Two smaller scope decisions are recorded for completeness. Free-text symptom
+entry, listed as a functional requirement at midterm, was descoped in favour of
+structured selection so that every input maps unambiguously to a knowledge-base
+identifier. Offline operation was not implemented: every diagnosis is a network
+round trip, which follows from the decision to keep all reasoning server-side.
 
 # Chapter Eight: Conclusions
 
@@ -859,18 +1011,41 @@ prototype to a deployable product.
 
 # References
 
+Ada Health. (2024). *Ada: Your health companion*. https://ada.com
+
+Babylon Health. (2023). *Babylon: Digital-first healthcare*.
+https://www.babylonhealth.com
+
+Buoy Health. (2024). *Buoy Health: Check symptoms and find the right care*.
+https://www.buoyhealth.com
+
+Chambers, D., Cantrell, A. J., Johnson, M., Preston, L., Baxter, S. K., Booth,
+A., & Turner, J. (2019). Digital and online symptom checkers and health
+assessment/triage services for urgent health problems: Systematic review. *BMJ
+Open*, 9(8), e027743. https://doi.org/10.1136/bmjopen-2018-027743
+
 Google Developers. (2024). *Maps Platform documentation*.
 https://developers.google.com/maps/documentation
+
+K Health. (2024). *K Health: Primary care powered by AI*. https://khealth.com
 
 Semigran, H. L., Linder, J. A., Gidengil, C., & Mehrotra, A. (2015). Evaluation
 of symptom checkers for self-diagnosis and triage: Audit study. *BMJ*, 351,
 h3480. https://doi.org/10.1136/bmj.h3480
 
+Wallace, W., Chan, C., Chidambaram, S., Hanna, L., Iqbal, F. M., Acharya, A.,
+Normahani, P., Ashrafian, H., Markar, S. R., Sounderajah, V., & Darzi, A.
+(2022). The diagnostic and triage accuracy of digital and online symptom checker
+tools: A systematic review. *npj Digital Medicine*, 5(1), 118.
+https://doi.org/10.1038/s41746-022-00667-w
+
+WebMD. (2024). *Symptom checker*. https://symptoms.webmd.com
+
+World Health Organization. (2021). *Global strategy on digital health
+2020-2025*. https://www.who.int/publications/i/item/9789240020924
+
 World Health Organization. (2023). *Primary health care*.
 https://www.who.int/health-topics/primary-health-care
-
-World Health Organization. (2022). *Global strategy on digital health
-2020-2025*. https://www.who.int/publications/i/item/9789240020924
 
 # Appendices
 

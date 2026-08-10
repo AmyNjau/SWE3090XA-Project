@@ -47,6 +47,7 @@ from base64 import b64encode
 from collections import Counter
 from pathlib import Path
 from urllib.parse import unquote
+from xml.etree import ElementTree
 
 HERE = Path(__file__).resolve().parent
 DOCS = HERE.parent
@@ -263,7 +264,17 @@ def alternative_figure(ref: str, source: Path) -> Path | None:
     """
     original = (source.parent / unquote(ref)).resolve()
     candidate = original.parent / "alt" / f"{original.stem}.svg"
-    return candidate if candidate.is_file() else None
+    if not candidate.is_file():
+        return None
+    # The file is spliced into the document as raw markup, so a malformed one
+    # would leak its source as visible text instead of drawing a figure.
+    try:
+        root = ElementTree.fromstring(candidate.read_text(encoding="utf-8"))
+    except ElementTree.ParseError as exc:
+        die(f"alternative figure {candidate} is not well-formed XML: {exc}")
+    if root.tag not in ("svg", "{http://www.w3.org/2000/svg}svg"):
+        die(f"alternative figure {candidate} is not an <svg> document (root: {root.tag})")
+    return candidate
 
 
 def fold_figures(body: str, source: Path, variant: str = "original") -> str:
@@ -292,6 +303,15 @@ def fold_figures(body: str, source: Path, variant: str = "original") -> str:
             j += 1
         cap = re.match(r"^\*([^*].*)\*\s*$", lines[j]) if j < len(lines) else None
         if not cap:
+            # Refuse rather than quietly keep the original here: an
+            # -alt-diagrams document that mixed the two sets would be worse
+            # than one that fails to build.
+            if variant == "alternative" and alternative_figure(m.group(2), source):
+                die(
+                    f"{m.group(2)} has an alternative figure but no caption line, so "
+                    "the alternative document would silently keep the original. Give "
+                    "it an italic caption line, as every other figure has."
+                )
             out.append(lines[i])
             i += 1
             continue
@@ -522,7 +542,7 @@ figure, img {{ max-width: 100%; }}
   break-inside: avoid; page-break-inside: avoid;
   text-align: center; margin: 14pt 0;
 }}
-.usiu-figure img {{ max-width: 100%; max-height: 6.2in; height: auto; }}
+.usiu-figure img, .usiu-figure svg {{ max-width: 100%; max-height: 6.2in; height: auto; }}
 .usiu-figure figcaption {{
   color: var(--usiu-grey); font-size: 9.5pt; font-style: italic;
   margin-top: 6pt;
@@ -697,6 +717,7 @@ def build_one(
             # re-render and re-measure until the numbers in the document are the
             # numbers the document actually has -- the same fixed-point pass
             # that typesetting systems run for cross-references.
+            previous = numbers
             for _ in range(MAX_NUMBERING_PASSES):
                 stage.write_text(assemble(numbers), encoding="utf-8", newline="\n")
                 run_make_pdf(binary, stage, pdf_tmp, meta, "pdf")
@@ -704,15 +725,21 @@ def build_one(
                 measured = locate_headings(rendered, headings, body_start)
                 if measured == numbers:
                     break
-                numbers = measured
+                # Keep the previous map separately: rebinding `numbers` to
+                # `measured` would leave the give-up branch below comparing a
+                # dict against itself, and it would always report nothing.
+                previous, numbers = numbers, measured
             else:
                 drifted = {
-                    k: (numbers[k], measured[k]) for k in numbers if numbers[k] != measured[k]
+                    k: (previous[k], measured[k])
+                    for k in previous
+                    if previous[k] != measured[k]
                 }
                 die(
                     "contents page numbering did not settle after "
-                    f"{MAX_NUMBERING_PASSES} passes; these headings keep moving: "
-                    f"{drifted}"
+                    f"{MAX_NUMBERING_PASSES} "
+                    f"{'pass' if MAX_NUMBERING_PASSES == 1 else 'passes'}; "
+                    f"these headings keep moving: {drifted}"
                 )
 
         if keep_docx:
