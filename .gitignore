@@ -32,3 +32,11 @@ __pycache__/
 
 # Reference material from another group, kept locally only
 Nipo_IST4078A_Group4_Report.*
+
+# Private defence notes: contain the demo account password and the presenting
+# script. Kept on Drive only, never pushed to a public repo.
+presentation/internal-notes.html
+presentation/internal-notes-simple.html
+
+# Android Studio project files
+.idea/
