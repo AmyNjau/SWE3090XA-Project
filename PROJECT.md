@@ -8,7 +8,7 @@ this file first**, then `CLAUDE.md` (rules), `README.md` (architecture) and
 - **Default branch:** `main`
 - **Local path:** `G:\My Drive\Claude\SWE3090XA` (Google Drive — see the constraint below)
 - **Author:** Amy Wanjugu Njau (ID 669008) · Supervisor: Mr Fredrick Ogore · USIU-Africa
-- **Last updated:** 2026-08-09
+- **Last updated:** 2026-08-10
 
 ---
 
@@ -41,6 +41,44 @@ this file first**, then `CLAUDE.md` (rules), `README.md` (architecture) and
   project.md file so that you'll never forget.
 - The goal is to have a fully secure, production-ready product.
 ```
+
+### Standing instructions added 2026-08-10
+
+These came directly from the user and override earlier sequencing.
+
+**The goal is a strong A.** Every graded artifact is optimised for marks, not
+merely for being finished. When the choice is between "good enough" and "what a
+marker would reward", pick the latter.
+
+**Delivery order — do not reorder without being asked:**
+
+1. The **end-semester report** (done — `docs/reports/end-semester-report.md`).
+2. **Firebase login** — email/password, full stack.
+3. The **internal notes presentation** (see below).
+4. Everything else.
+
+**The presentation is the most important artifact overall**, even though it is
+sequenced after the two items above. Two decks are required and must stay
+separate:
+
+- `presentation/index.html` — what the lecturer sees.
+- A **private internal-notes deck** that only the user reads while presenting.
+  It must carry the full presenting script plus **every question the lecturer
+  might plausibly ask**. The lecturer is known to probe **the code and the
+  backend**, so it has to go deep on `backend/` and be answerable without
+  opening an editor. Never show or publish this one.
+
+**Repo and folder are one thing.** `G:\My Drive\Claude\SWE3090XA` and
+`github.com/AmyNjau/SWE3090XA-Project` must stay in sync. Never leave work
+committed locally but unpushed, or pushed but unmerged.
+
+**Licensing** must suit Kenyan law (Copyright Act 2001, academic work by a
+USIU-Africa student).
+
+**The final milestone of the whole project** is a **submission zip** of this
+folder containing only what the lecturer needs to run the app and read the
+reports. Exclude agent and tooling scaffolding: `CLAUDE.md`, `PROJECT.md`,
+`.gstack/`, `.claude/`, `.git/`, caches.
 
 ### What that means in practice
 
@@ -244,6 +282,30 @@ without scrolling at 1280×720 → 1920×1080.
 | 2026-07 | Defence deck | 24-slide HTML deck with speaker notes and scoring cues |
 | 2026-07 | Deck responsive | Phone breakpoints, code-block rendering fix |
 | 2026-07–08 | **PR #1** | Notes-overlap fix, phone-ready standalone build, `CLAUDE.md`, this file |
+| 2026-08-10 | **PR #2** | USIU brand assets + `docs/reports/build.py` branded report pipeline; System Integration Report rebuilt from markdown |
+| 2026-08-10 | **PR #3** | End-of-semester report; two diagram sets per report (original vs redrawn) |
+
+**Defects found and fixed while verifying PR #2** (the sub-agent review caught
+all four blockers; every one was reproduced before being fixed):
+
+1. **Every figure caption was orphaned** onto the page after its figure, leaving
+   two near-blank pages. An image plus its italic caption is now folded into one
+   unbreakable `<figure>`; the report went from 18 pages to 15.
+2. **Contents numbers could be silently wrong.** The page cursor advanced to the
+   matched *page* rather than past the matched *line*, so a repeated heading
+   title re-matched its own earlier occurrence; and a heading whose text also
+   appeared as an ordinary body line took that line's page. Both passes made the
+   identical mistake, so the drift check could never catch either.
+3. **`--no-toc-numbers` shipped the measurement pass**, emitting a contents page
+   of `0`s plus 31 copies of the invisible sentinel — and it was the documented
+   fallback for machines without `pdftotext`.
+4. **A failed build overwrote the committed deliverable**, because output was
+   written straight into `build/` before any assertion ran.
+
+**The lesson from PR #2, worth remembering:** the first build "worked" — exit 0,
+correct page count, plausible contents page — and was still wrong in four ways
+that only a page-by-page look at the rendered output revealed. Exit codes are
+not verification.
 
 **Defects found and fixed while verifying PR #1** (recorded because they show the
 failure mode to watch for — *claims not checked against the running page*):
@@ -292,10 +354,45 @@ over its own heading. The measurement has to target the thing that actually brea
 
 ## 7. Roadmap — what is planned next
 
-Ordered. The stated goal is **a fully secure, production-ready product**, so security
-comes before features.
+**The user's delivery order takes precedence over the milestone letters below.**
+Next up is Firebase login, then the internal notes deck. The security work in
+Milestone A remains the top *engineering* priority and is already written up as
+a limitation in the end-of-semester report.
 
-### Milestone A — Security hardening of the API (do this first)
+### Milestone R — Reports (done 2026-08-10)
+
+- [x] `docs/reports/build.py` — markdown to USIU-branded PDF + DOCX.
+- [x] System Integration Report rebuilt from markdown.
+- [x] End-of-semester report written and built.
+- [x] Two diagram sets per report: originals in `docs/figures/`, redrawn SVGs in
+      `docs/figures/alt/`. Every report builds both ways so the user can choose.
+- [ ] Rebuild the logbook through the same pipeline.
+
+### Milestone F — Firebase login (do this next)
+
+- [ ] Enable email/password on the existing project `smart-health-swe3090xa`
+      (an Android app is already registered for `com.example.smart_health`).
+- [ ] `firebase-admin` token-verification middleware on the backend; protect the
+      routes; attach the uid to the query log.
+- [ ] Flutter sign-in/sign-up, auth gate, ID token on API calls, per-user History.
+- [ ] Note that `mobile/android/` lives only in the local-disk copy, so
+      `google-services.json` and the Gradle plugin edits must be documented in
+      `LAUNCH.md` rather than committed here.
+
+### Milestone P — Presentation
+
+- [ ] Private internal-notes deck: full script plus anticipated lecturer
+      questions, weighted to code and backend. Never shown to the lecturer.
+- [ ] Refresh the lecturer-facing deck to match the delivered system.
+
+### Milestone Z — Submission (last milestone of the project)
+
+- [ ] Zip this folder as the submission, including only what the lecturer needs
+      to run the app and read the reports; exclude `CLAUDE.md`, `PROJECT.md`,
+      `.gstack/`, `.claude/`, `.git/` and caches.
+- [ ] Add a licence appropriate to Kenyan law.
+
+### Milestone A — Security hardening of the API
 
 Concrete gaps found by reading `backend/src` on 2026-08-09:
 
