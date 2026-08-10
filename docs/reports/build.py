@@ -64,6 +64,10 @@ GREY = "#5B6B82"
 # Marks contents pages during the measurement pass only. See toc_html().
 TOC_SENTINEL = "TOCPGMARK"
 
+# How many times the contents page may be re-rendered while its page numbers
+# settle. Two is normally enough; more than this means something is oscillating.
+MAX_NUMBERING_PASSES = 5
+
 # Front-matter keys every report cover must carry.
 REQUIRED_KEYS = [
     "title",
@@ -250,13 +254,28 @@ def extract_headings(body: str) -> list[dict]:
     return headings
 
 
-def fold_figures(body: str) -> str:
+def alternative_figure(ref: str, source: Path) -> Path | None:
+    """Return the redrawn SVG for an image reference, if one exists.
+
+    An original at `../figures/x.png` is matched by `../figures/alt/x.svg`.
+    This is what lets one markdown source produce both a document carrying the
+    original diagrams and one carrying the redrawn set, with no duplicated prose.
+    """
+    original = (source.parent / unquote(ref)).resolve()
+    candidate = original.parent / "alt" / f"{original.stem}.svg"
+    return candidate if candidate.is_file() else None
+
+
+def fold_figures(body: str, source: Path, variant: str = "original") -> str:
     """Bind each image to the caption line beneath it.
 
     A bare image followed by a separate italic caption paragraph lets the
     renderer put the image on one page and its caption on the next, which left
     three orphaned captions and two near-blank pages in the first build.
     Wrapping both in one unbreakable <figure> keeps them together.
+
+    In the "alternative" variant, an image that has a redrawn SVG beside it is
+    replaced by that SVG, inlined so it stays vector-crisp in print.
     """
     lines = body.splitlines()
     masked = fence_mask(body)
@@ -276,11 +295,17 @@ def fold_figures(body: str) -> str:
             out.append(lines[i])
             i += 1
             continue
-        alt, src = html.escape(m.group(1)), html.escape(m.group(2), quote=True)
+        alt_text, src = html.escape(m.group(1)), html.escape(m.group(2), quote=True)
+        swap = alternative_figure(m.group(2), source) if variant == "alternative" else None
+        inner = (
+            swap.read_text(encoding="utf-8").strip()
+            if swap
+            else f'<img src="{src}" alt="{alt_text}">'
+        )
         out.append(
             '<figure class="usiu-figure">'
-            f'<img src="{src}" alt="{alt}">'
-            f'<figcaption>{html.escape(cap.group(1).strip())}</figcaption>'
+            + inner
+            + f"<figcaption>{html.escape(cap.group(1).strip())}</figcaption>"
             "</figure>"
         )
         i = j + 1
@@ -353,8 +378,18 @@ def toc_html(headings: list[dict], pages: dict[str, int] | None) -> str:
     heading it points at. The sentinel is absent from the delivered document.
     """
     measuring = pages is None
+    # Taken out of the flow entirely: the sentinel exists only in the measuring
+    # pass, so it must not occupy a single pixel, or removing it for the real
+    # render would shift the pagination the measurement just recorded.
+    # Absolutely positioned inside its own row: out of the flow, so removing it
+    # for the real render cannot shift the pagination the measurement recorded,
+    # yet still painted (white, 1pt) on the page its row lands on, so text
+    # extraction can tell contents pages from body pages.
     sentinel = (
-        f'<span style="font-size:1pt;color:#ffffff">{TOC_SENTINEL}</span>' if measuring else ""
+        f'<span style="position:absolute;right:0;top:0;font-size:1pt;'
+        f'color:#ffffff">{TOC_SENTINEL}</span>'
+        if measuring
+        else ""
     )
     rows = []
     for h in headings:
@@ -445,7 +480,10 @@ table.cover-meta td {{ color: var(--usiu-ink); }}
   color: var(--usiu-blue); font-size: 17pt; margin: 0 0 4pt;
   padding-bottom: 6pt; border-bottom: 3px solid var(--usiu-gold);
 }}
-.toc-row {{ display: flex; align-items: baseline; margin: 7pt 0; font-size: 11pt; }}
+.toc-row {{
+  display: flex; align-items: baseline; margin: 7pt 0; font-size: 11pt;
+  position: relative; /* anchors the measuring-pass sentinel to this row */
+}}
 .toc-row a {{ color: var(--usiu-ink); text-decoration: none; }}
 .toc-l1 {{ font-weight: 600; margin-top: 11pt; }}
 .toc-l1 a {{ color: var(--usiu-blue-dark); }}
@@ -454,7 +492,13 @@ table.cover-meta td {{ color: var(--usiu-ink); }}
   flex: 1 1 auto; border-bottom: 1px dotted var(--usiu-grey);
   margin: 0 6pt; transform: translateY(-3px); min-width: 12pt;
 }}
-.toc-page {{ color: var(--usiu-grey); font-variant-numeric: tabular-nums; }}
+/* Fixed width and right alignment so a one-digit placeholder and a two-digit
+   real page number occupy identical space; otherwise the second pass could
+   reflow the very rows the first pass measured. */
+.toc-page {{
+  color: var(--usiu-grey); font-variant-numeric: tabular-nums;
+  min-width: 26pt; text-align: right; flex: 0 0 auto;
+}}
 
 /* Body ------------------------------------------------------------------- */
 h1.usiu-h1 {{
@@ -601,14 +645,21 @@ def locate_headings(pages: list[str], headings: list[dict], start: int) -> dict[
     return found
 
 
-def build_one(source: Path, binary: str, want_numbers: bool, keep_docx: bool) -> None:
+def build_one(
+    source: Path,
+    binary: str,
+    want_numbers: bool,
+    keep_docx: bool,
+    variant: str = "original",
+) -> None:
     if not source.is_file():
         die(f"source not found: {source}")
     meta, body = split_front_matter(source.read_text(encoding="utf-8"))
     check_images(body, source)
     headings = extract_headings(body)
-    body_html = fold_figures(rewrite_headings(body, headings))
+    body_html = fold_figures(rewrite_headings(body, headings), source, variant)
     BUILD_DIR.mkdir(parents=True, exist_ok=True)
+    stem = source.stem if variant == "original" else f"{source.stem}-alt-diagrams"
 
     def assemble(pages: dict[str, int] | None, with_css: bool = True) -> str:
         # Word ignores <style>, and make-pdf's DOCX writer emits the ignored
@@ -618,9 +669,9 @@ def build_one(source: Path, binary: str, want_numbers: bool, keep_docx: bool) ->
 
     # The staged source must sit beside the real one so that relative image
     # paths (../figures/...) resolve identically.
-    stage = source.with_name(f".{source.stem}.staged.md")
-    pdf_out = BUILD_DIR / f"{source.stem}.pdf"
-    docx_out = BUILD_DIR / f"{source.stem}.docx"
+    stage = source.with_name(f".{stem}.staged.md")
+    pdf_out = BUILD_DIR / f"{stem}.pdf"
+    docx_out = BUILD_DIR / f"{stem}.docx"
     # Render to a scratch path and only move into build/ once every assertion
     # has passed, so a failed run cannot replace the committed deliverable with
     # a half-built one.
@@ -638,27 +689,31 @@ def build_one(source: Path, binary: str, want_numbers: bool, keep_docx: bool) ->
         if want_numbers:
             pdftotext = find_pdftotext()
             pages_text = pdf_pages_text(pdftotext, pdf_tmp)
-            first_pass_pages = len(pages_text)
             body_start = first_body_page(pages_text)
             numbers = locate_headings(pages_text, headings, body_start)
-            stage.write_text(assemble(numbers), encoding="utf-8", newline="\n")
-            run_make_pdf(binary, stage, pdf_tmp, meta, "pdf")
 
-            # Filling in the numbers must not have moved anything.
-            second = pdf_pages_text(pdftotext, pdf_tmp)
-            if len(second) != first_pass_pages:
+            # Writing the numbers in can itself nudge a heading across a page
+            # boundary, which would make the number just written wrong. So
+            # re-render and re-measure until the numbers in the document are the
+            # numbers the document actually has -- the same fixed-point pass
+            # that typesetting systems run for cross-references.
+            for _ in range(MAX_NUMBERING_PASSES):
+                stage.write_text(assemble(numbers), encoding="utf-8", newline="\n")
+                run_make_pdf(binary, stage, pdf_tmp, meta, "pdf")
+                rendered = pdf_pages_text(pdftotext, pdf_tmp)
+                measured = locate_headings(rendered, headings, body_start)
+                if measured == numbers:
+                    break
+                numbers = measured
+            else:
+                drifted = {
+                    k: (numbers[k], measured[k]) for k in numbers if numbers[k] != measured[k]
+                }
                 die(
-                    "pagination changed between passes "
-                    f"({first_pass_pages} -> {len(second)} pages); the contents "
-                    "page numbers would be wrong. Shorten the contents page."
+                    "contents page numbering did not settle after "
+                    f"{MAX_NUMBERING_PASSES} passes; these headings keep moving: "
+                    f"{drifted}"
                 )
-            # The sentinel is gone from the delivered render, so reuse the body
-            # offset measured in the first pass; the page-count check above has
-            # already established that pagination did not move.
-            recheck = locate_headings(second, headings, body_start)
-            drifted = {k: (numbers[k], recheck[k]) for k in numbers if numbers[k] != recheck[k]}
-            if drifted:
-                die(f"heading pages moved between passes: {drifted}")
 
         if keep_docx:
             # Page numbers measured from the PDF do not apply once Word
@@ -685,6 +740,16 @@ def main() -> None:
     ap.add_argument("--all", action="store_true", help="build every *.md in this folder")
     ap.add_argument("--no-toc-numbers", action="store_true", help="skip the second pass that numbers the contents page")
     ap.add_argument("--no-docx", action="store_true", help="build the PDF only")
+    ap.add_argument(
+        "--diagrams",
+        choices=["both", "original", "alternative"],
+        default="both",
+        help=(
+            "which diagram set to build. 'both' (default) emits <name>.pdf with the "
+            "original figures and <name>-alt-diagrams.pdf with the redrawn ones, so "
+            "the two can be compared side by side"
+        ),
+    )
     args = ap.parse_args()
 
     if args.all or not args.sources:
@@ -706,8 +771,16 @@ def main() -> None:
             sources.append(p)
 
     binary = find_make_pdf()
+    variants = ["original", "alternative"] if args.diagrams == "both" else [args.diagrams]
     for src in sources:
-        build_one(src, binary, want_numbers=not args.no_toc_numbers, keep_docx=not args.no_docx)
+        for variant in variants:
+            build_one(
+                src,
+                binary,
+                want_numbers=not args.no_toc_numbers,
+                keep_docx=not args.no_docx,
+                variant=variant,
+            )
 
 
 if __name__ == "__main__":

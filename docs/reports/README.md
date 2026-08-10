@@ -29,6 +29,29 @@ Useful flags:
 |---|---|
 | `--no-docx` | PDF only (faster while iterating on wording) |
 | `--no-toc-numbers` | Build without the measuring pass; the contents page then lists sections with no page numbers |
+| `--diagrams original\|alternative\|both` | Which diagram set to use. Default `both` |
+
+## Two diagram sets
+
+Every report is built twice, so you can pick whichever version you prefer to
+submit:
+
+| Output | Diagrams |
+|---|---|
+| `<name>.pdf` | The original figures from `../figures/` |
+| `<name>-alt-diagrams.pdf` | The redrawn set from `../figures/alt/` |
+
+The prose is identical; only the figures differ. There is no duplicated source.
+
+To provide an alternative for a figure, drop an SVG next to the original with
+the same stem, under an `alt/` subfolder: `../figures/x.png` is matched by
+`../figures/alt/x.svg`. The build inlines that SVG, so it stays vector-crisp in
+print. Any figure without an alternative simply keeps its original in both
+documents.
+
+The redrawn diagrams are hand-authored SVG in the USIU palette rather than
+generated, because the generated route rendered as solid black boxes with
+clipped labels in this toolchain.
 
 ## Writing a report
 
@@ -89,14 +112,16 @@ image inlining) and adds the branding on top:
 2. Headings are rewritten to anchored HTML so the contents page can link to them,
    and each top-level section gets an explicit page break.
 3. The branded cover, the contents page and the stylesheet are prepended.
-4. The document is rendered **twice**. The first pass measures which page each
-   heading landed on; the second fills those numbers into the contents page.
+4. The document is rendered repeatedly until the contents page settles. The
+   first render measures which page each heading landed on; each subsequent one
+   writes those numbers in and re-measures.
 
-The second pass exists because this toolchain has no Paged.js, so the CSS
+That loop exists because this toolchain has no Paged.js, so the CSS
 `target-counter()` that would normally number a contents page never resolves.
-Filling numbers in does not reflow anything, and the build asserts that: if the
-page count or any heading's page moves between the two passes, it fails rather
-than ship a contents page that lies.
+Writing the numbers in can itself nudge a heading across a page boundary, so the
+build iterates to a fixed point the way a typesetting system resolves
+cross-references, and gives up loudly if the numbers have not settled after five
+passes rather than ship a contents page that lies.
 
 During the measuring pass only, each contents row carries an invisible sentinel
 so those pages can be excluded when locating body headings. Text extraction
