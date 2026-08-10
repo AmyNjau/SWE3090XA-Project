@@ -107,9 +107,24 @@ There is no CLI command for it. Until it is enabled, sign-in fails with
    npm start
    ```
 
-2. In Android Studio, **open the folder** `C:\Users\amnja\swe3090xa-mobile`
-   (not the Drive copy — the Drive copy has no `android/` folder). Let Gradle
-   finish syncing.
+2. In Android Studio, **open the folder** `G:\My Drive\Claude\SWE3090XA\mobile`.
+   Let Gradle finish syncing.
+
+   > **Why the Drive folder builds at all.** Gradle on a Google Drive path fails
+   > by default with *"Could not close incremental caches"*, because Drive's sync
+   > layer cannot host the memory-mapped files the Kotlin incremental compiler
+   > uses, and Kotlin cannot compute relative paths between the pub cache on `C:`
+   > and a project on `G:` (*"different roots"*). The fix is
+   > `kotlin.incremental=false` in `mobile/android/gradle.properties`, which is
+   > committed. Do not remove it, or the build breaks again. Rebuilds are a
+   > little slower as a result.
+   >
+   > If a build ever fails oddly after switching branches or settings, run
+   > `flutter clean` first — stale Gradle state on Drive does not recover on its
+   > own.
+   >
+   > `C:\Users\amnja\swe3090xa-mobile` remains as a faster local-disk copy and
+   > still works; it is a copy, not the source of truth.
 
 3. Pick the device in the toolbar dropdown: either the `swe_pixel` emulator or
    a physical phone with USB debugging on.
