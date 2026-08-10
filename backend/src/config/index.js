@@ -21,6 +21,23 @@ const config = {
   // Firebase (only required when dataStore === 'firestore')
   firebaseProjectId: process.env.FIREBASE_PROJECT_ID || '',
 
+  auth: {
+    // When true, the diagnose and providers endpoints reject any request that
+    // does not carry a valid Firebase ID token. Left off by default so the
+    // demo and the test suite run without credentials; production must set
+    // AUTH_REQUIRED=true. A token that IS supplied is always verified, whatever
+    // this is set to, so a forged one can never be accepted.
+    required: process.env.AUTH_REQUIRED === 'true',
+
+    // Project whose ID tokens are accepted. Falls back to the Firestore project
+    // id so a single FIREBASE_PROJECT_ID configures both.
+    projectId: process.env.FIREBASE_AUTH_PROJECT_ID || process.env.FIREBASE_PROJECT_ID || '',
+
+    // Path to a service-account JSON key. Optional: on Google infrastructure
+    // the default application credentials are used instead.
+    credentialsPath: process.env.GOOGLE_APPLICATION_CREDENTIALS || '',
+  },
+
   // Engine tuning
   diagnosis: {
     // Conditions scoring below this normalised confidence are discarded.

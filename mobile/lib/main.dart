@@ -1,10 +1,15 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
+import 'firebase_options.dart';
+import 'screens/auth_gate.dart';
 import 'services/api_service.dart';
+import 'services/auth_service.dart';
 import 'theme/app_theme.dart';
-import 'screens/main_shell.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   runApp(const SmartHealthApp());
 }
 
@@ -16,8 +21,16 @@ class SmartHealthApp extends StatefulWidget {
 }
 
 class _SmartHealthAppState extends State<SmartHealthApp> {
-  // A single API client is shared across screens.
-  final ApiService _api = ApiService();
+  final AuthService _auth = AuthService();
+  late final ApiService _api;
+
+  @override
+  void initState() {
+    super.initState();
+    // The API client asks the auth service for a token on each request, so a
+    // refreshed token is picked up without anything having to be re-wired.
+    _api = ApiService(tokenProvider: () => _auth.idToken());
+  }
 
   @override
   void dispose() {
@@ -31,7 +44,7 @@ class _SmartHealthAppState extends State<SmartHealthApp> {
       title: 'Smart Health',
       debugShowCheckedModeBanner: false,
       theme: buildAppTheme(),
-      home: MainShell(api: _api),
+      home: AuthGate(api: _api, auth: _auth),
     );
   }
 }

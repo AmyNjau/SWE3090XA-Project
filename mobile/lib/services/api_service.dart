@@ -22,9 +22,21 @@ class ApiService {
   final String baseUrl;
   final http.Client _client;
 
-  ApiService({String? baseUrl, http.Client? client})
+  /// Supplies the current Firebase ID token, or null when signed out. Injected
+  /// as a callback rather than importing the auth service so this class stays
+  /// free of Firebase and remains testable with a plain function.
+  Future<String?> Function()? tokenProvider;
+
+  ApiService({String? baseUrl, http.Client? client, this.tokenProvider})
       : baseUrl = baseUrl ?? AppConfig.apiBaseUrl,
         _client = client ?? http.Client();
+
+  /// Authorization header for the signed-in user, empty when signed out.
+  Future<Map<String, String>> _authHeaders() async {
+    final token = await tokenProvider?.call();
+    if (token == null || token.isEmpty) return const {};
+    return {'Authorization': 'Bearer $token'};
+  }
 
   /// GET /api/symptoms -> the catalogue used to populate the input screen.
   Future<List<Symptom>> fetchSymptoms() async {
@@ -56,7 +68,10 @@ class ApiService {
 
   Future<Map<String, dynamic>> _get(String path) async {
     try {
-      final res = await _client.get(Uri.parse('$baseUrl$path'));
+      final res = await _client.get(
+        Uri.parse('$baseUrl$path'),
+        headers: await _authHeaders(),
+      );
       return _decode(res);
     } catch (e) {
       throw ApiException(_networkMessage(e));
@@ -67,7 +82,7 @@ class ApiService {
     try {
       final res = await _client.post(
         Uri.parse('$baseUrl$path'),
-        headers: {'Content-Type': 'application/json'},
+        headers: {'Content-Type': 'application/json', ...await _authHeaders()},
         body: jsonEncode(body),
       );
       return _decode(res);

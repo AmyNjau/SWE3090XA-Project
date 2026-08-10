@@ -27,7 +27,23 @@ class HistoryStore extends ChangeNotifier {
   HistoryStore._();
   static final HistoryStore instance = HistoryStore._();
 
-  final List<HistoryEntry> _entries = [];
+  /// Entries per account id. Keeping them separate rather than clearing on
+  /// sign-out means switching back to an account restores its own history, and
+  /// one user can never see another's checks.
+  final Map<String, List<HistoryEntry>> _byUser = {};
+  String _uid = _anonymous;
+
+  static const String _anonymous = '__anonymous__';
+
+  List<HistoryEntry> get _entries => _byUser.putIfAbsent(_uid, () => []);
+
+  /// Point the store at an account. Called by AuthGate on every auth change.
+  void setUser(String? uid) {
+    final next = uid ?? _anonymous;
+    if (next == _uid) return;
+    _uid = next;
+    notifyListeners();
+  }
 
   List<HistoryEntry> get entries => List.unmodifiable(_entries);
   int get count => _entries.length;

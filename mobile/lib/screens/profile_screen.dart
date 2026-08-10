@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../theme/app_theme.dart';
+import '../services/auth_service.dart';
 import '../state/history_store.dart';
 
 /// The Profile tab: a premium profile header, quick stats, and settings.
 /// Conceptually backed by the "User" entity in the data model.
 class ProfileScreen extends StatelessWidget {
-  const ProfileScreen({super.key});
+  final AuthService auth;
+  const ProfileScreen({super.key, required this.auth});
 
   @override
   Widget build(BuildContext context) {
@@ -82,6 +84,23 @@ class ProfileScreen extends StatelessWidget {
                     ),
                   ],
                 ),
+                const SizedBox(height: 20),
+                _SettingsGroup(
+                  title: 'Account',
+                  tiles: [
+                    _SettingTile(
+                      icon: Icons.alternate_email_rounded,
+                      color: AppColors.blue,
+                      label: auth.currentUser?.email ?? 'Signed in',
+                    ),
+                    _SettingTile(
+                      icon: Icons.logout_rounded,
+                      color: const Color(0xFFB3261E),
+                      label: 'Sign out',
+                      onTap: () => _confirmSignOut(context, auth),
+                    ),
+                  ],
+                ),
                 const SizedBox(height: 24),
               ],
             ),
@@ -138,6 +157,29 @@ class ProfileScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+
+/// Signing out is destructive enough to confirm: in-memory history for the
+/// session is not visible to a signed-out user.
+Future<void> _confirmSignOut(BuildContext context, AuthService auth) async {
+  final confirmed = await showDialog<bool>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: const Text('Sign out?'),
+      content: const Text(
+        'You will need to sign in again to run a symptom check or see your history.',
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+        FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Sign out')),
+      ],
+    ),
+  );
+  if (confirmed == true) {
+    // AuthGate is listening; it swaps back to the sign-in screen itself.
+    await auth.signOut();
   }
 }
 

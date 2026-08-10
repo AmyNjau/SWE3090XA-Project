@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../services/api_service.dart';
+import '../services/auth_service.dart';
 import '../widgets/app_bottom_nav.dart';
 import 'home_screen.dart';
 import 'symptom_input_screen.dart';
@@ -11,7 +12,8 @@ import 'profile_screen.dart';
 /// navigation bar. An IndexedStack preserves each tab's state when switching.
 class MainShell extends StatefulWidget {
   final ApiService api;
-  const MainShell({super.key, required this.api});
+  final AuthService auth;
+  const MainShell({super.key, required this.api, required this.auth});
 
   @override
   State<MainShell> createState() => _MainShellState();
@@ -32,7 +34,7 @@ class _MainShellState extends State<MainShell> {
           HomeScreen(onSelectTab: _select),
           SymptomInputScreen(api: widget.api),
           HistoryScreen(onSelectTab: _select),
-          const ProfileScreen(),
+          ProfileScreen(auth: widget.auth),
         ],
       ),
       bottomNavigationBar: AppBottomNav(index: _index, onTap: _select),

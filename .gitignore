@@ -29,3 +29,6 @@ mobile/.idea/
 # Python bytecode (docs/reports/build.py)
 __pycache__/
 *.pyc
+
+# Reference material from another group, kept locally only
+Nipo_IST4078A_Group4_Report.*

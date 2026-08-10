@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#B3261E">
+<meta name="robots" content="noindex, nofollow">
+<title>PRIVATE — Cheat Sheet · Smart Health</title>
+<style>
+  :root{
+    --blue:#204098; --blue-dark:#283890; --gold:#F8C808;
+    --ink:#151a22; --muted:#5B6B82; --line:#e3e7ef; --bg:#f7f8fb; --warn:#B3261E;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font:18px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  .bar{
+    background:var(--warn); color:#fff; text-align:center; font-weight:700;
+    font-size:12px; letter-spacing:.05em; text-transform:uppercase;
+    padding:8px 12px; padding-top:calc(8px + env(safe-area-inset-top));
+  }
+  main{
+    max-width:720px; margin:0 auto;
+    padding:18px 16px calc(60px + env(safe-area-inset-bottom));
+    padding-left:calc(16px + env(safe-area-inset-left));
+    padding-right:calc(16px + env(safe-area-inset-right));
+  }
+  h1{font-size:24px; color:var(--blue); margin:10px 0 2px}
+  .sub{color:var(--muted); font-size:15px; margin:0 0 18px}
+  h2{
+    font-size:19px; color:var(--blue); margin:30px 0 8px;
+    padding-bottom:6px; border-bottom:3px solid var(--gold);
+  }
+  .box{background:#fff; border:1px solid var(--line); border-radius:12px; padding:14px 16px; margin:10px 0}
+  .say{
+    background:#fff; border-left:5px solid var(--blue); border-radius:0 10px 10px 0;
+    padding:12px 15px; margin:10px 0; font-size:18px;
+  }
+  .say b{color:var(--blue-dark)}
+  .qa{background:#fff; border:1px solid var(--line); border-radius:12px; padding:13px 15px; margin:9px 0}
+  .qa .q{font-weight:700; color:var(--warn); display:block; margin-bottom:5px; font-size:17px}
+  .qa p{margin:5px 0}
+  .big{
+    background:var(--blue); color:#fff; border-radius:12px; padding:16px;
+    text-align:center; margin:14px 0;
+  }
+  .big .n{font-size:30px; font-weight:800; display:block; line-height:1.15}
+  .big .l{font-size:14px; opacity:.9}
+  .grid{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+  .stat{background:#fff; border:1px solid var(--line); border-radius:10px; padding:11px; text-align:center}
+  .stat .n{font-size:22px; font-weight:800; color:var(--blue); display:block}
+  .stat .l{font-size:13px; color:var(--muted)}
+  ol{margin:6px 0 6px 22px; padding:0} li{margin:6px 0}
+  code{background:#eef1f7; padding:2px 6px; border-radius:5px; font-size:15px; word-break:break-word}
+  .warnbox{background:#fdecec; border:1px solid #f3b7b7; border-radius:12px; padding:13px 15px; margin:12px 0}
+  .steps{background:#fff; border:1px solid var(--line); border-radius:12px; padding:14px 16px}
+  .steps b{color:var(--blue)}
+  a.top{display:block; text-align:center; color:var(--muted); font-size:14px; margin-top:26px; text-decoration:none}
+</style>
+</head>
+<body>
+
+<div class="bar">Private · your eyes only · do not show anyone</div>
+
+<main>
+
+<h1>The 5-minute version</h1>
+<p class="sub">Everything you actually need. Read this on the way in.</p>
+
+<div class="warnbox">
+  <b>Never say "it diagnoses."</b><br>
+  Say: <em>"it ranks likely conditions and shows why."</em><br><br>
+  <b>Don't know? Say so.</b> "I haven't measured that — here's how I would."<br><br>
+  <b>Mention your gaps first.</b> It looks like judgement, not weakness.
+</div>
+
+<h2>What it is, in one breath</h2>
+<div class="say">
+  <b>Say this:</b> "You type your symptoms. It tells you what you might have, why it thinks so, which kind of doctor to see, and where the nearest one is."
+</div>
+
+<h2>How it works (explain like this)</h2>
+<div class="box">
+  <p>Think of a <b>scorecard for each illness</b>.</p>
+  <p>Every illness has a list of symptoms, and each symptom has a <b>score</b> for how strongly it points to that illness. Fever points strongly to malaria (0.9). Headache points weakly (0.5).</p>
+  <p>You tick your symptoms. For each illness I <b>add up the scores you ticked</b>, then <b>divide by that illness's total possible score</b>. That gives a percentage.</p>
+  <p>Highest percentage wins. That's it. No AI, no black box — just adding and dividing.</p>
+</div>
+
+<div class="big">
+  <span class="n">0.9 + 0.5 + 0.8 = 2.2</span>
+  <span class="l">fever + headache + chills</span>
+  <span class="n" style="font-size:24px; margin-top:8px">2.2 ÷ 4.0 = 55%</span>
+  <span class="l">malaria's total possible score is 4.0</span>
+</div>
+
+<div class="say">
+  <b>Say this:</b> "That 55% isn't a guess from a model. It's fever plus headache plus chills, divided by everything malaria could score. I can do it on the whiteboard."
+</div>
+
+<h2>Why not AI? (they will ask)</h2>
+<div class="box">
+  <p><b>Three reasons, in order:</b></p>
+  <ol>
+    <li><b>You can see why.</b> Every number breaks down into named symptoms. An AI can't show its working.</li>
+    <li><b>I have no medical dataset.</b> Training on a small or biased one, for health, would be worse than useless.</li>
+    <li><b>A doctor can fix it.</b> A wrong number is a one-line change. A wrong model needs retraining.</li>
+  </ol>
+</div>
+
+<h2>The numbers to remember</h2>
+<div class="grid">
+  <div class="stat"><span class="n">15</span><span class="l">conditions</span></div>
+  <div class="stat"><span class="n">35</span><span class="l">symptoms</span></div>
+  <div class="stat"><span class="n">9</span><span class="l">specialist types</span></div>
+  <div class="stat"><span class="n">5</span><span class="l">API endpoints</span></div>
+  <div class="stat"><span class="n">25</span><span class="l">tests, all passing</span></div>
+  <div class="stat"><span class="n">12/12</span><span class="l">test cases ranked right</span></div>
+</div>
+
+<h2>The three layers</h2>
+<div class="box">
+  <p><b>1. The phone app</b> (Flutter) — collects symptoms, shows results. <b>Does no thinking at all.</b></p>
+  <p><b>2. The server</b> (Node/Express) — holds the scorecard logic and talks to Google Maps.</p>
+  <p><b>3. The data</b> — the illness rules, and the map service for nearby clinics.</p>
+  <div class="say" style="margin-top:12px">
+    <b>Say this:</b> "The phone holds no medical logic. That's deliberate — I can fix a wrong rule on the server without shipping a new app, and the Google Maps key never leaves the server."
+  </div>
+</div>
+
+<h2>The demo — in order</h2>
+<div class="steps">
+  <p><b>Before they arrive:</b> backend running (terminal visible), emulator open, signed in, and run <code>adb emu geo fix 36.8028 -1.2641</code>.</p>
+  <ol>
+    <li>Home screen</li>
+    <li><b>Check</b> tab</li>
+    <li>Tick <b>Fever + Headache + Chills</b></li>
+    <li><b>Analyse</b> → <b>Malaria 55%</b></li>
+    <li><b>Point at the chips</b> — "that's the why"</li>
+    <li><b>Find Nearby Doctors</b></li>
+    <li><b>Directions</b> → opens Google Maps</li>
+    <li><b>History</b>, then <b>Profile</b></li>
+  </ol>
+</div>
+
+<h2>The 8 answers that cover most questions</h2>
+
+<div class="qa"><span class="q">Is it a medical device?</span>
+<p>"No. It's guidance, not diagnosis. Every single response carries a disclaimer, and that's set in one config file so no part of the code can forget it."</p></div>
+
+<div class="qa"><span class="q">Are the medical rules verified by a doctor?</span>
+<p>"No, and I say so in the report. I curated them from public sources. Clinical review is the first thing needed before real use. That's the weakest part of the system and I know it."</p></div>
+
+<div class="qa"><span class="q">How accurate is it?</span>
+<p>"I ran 12 test cases, one per illness. It ranked the right one first every time. But I wrote those cases against my own rules — so it proves the maths works, not that the medicine is right."</p></div>
+
+<div class="qa"><span class="q">What if someone gets hurt by a wrong answer?</span>
+<p>"That shaped the design. It shows a ranked list, not a verdict. It shows the reasoning. It flags severity. It always sends you to a real doctor. And it says on every screen that it's guidance only."</p></div>
+
+<div class="qa"><span class="q">Is it secure?</span>
+<p>"The Maps key is server-side only, input is validated, errors never leak internals, and sign-in uses Firebase with tokens verified on the server. Not done yet: HTTPS on the dev build, rate limiting, security headers. They're written up as next steps."</p></div>
+
+<div class="qa"><span class="q">How do you know it works?</span>
+<p>"25 automated tests, all passing. The scoring engine is a pure function — no database, no network — so the riskiest part is the easiest to test. That was on purpose."</p></div>
+
+<div class="qa"><span class="q">What's new about it?</span>
+<p>"Not symptom checking on its own. It's the combination: explainable results, plus which doctor to see, plus where they are — built for a Kenyan, low-connectivity setting. No tool I reviewed does all three."</p></div>
+
+<div class="qa"><span class="q">Did you write this code?</span>
+<p>"Yes — open any file and I'll walk you through it." <em>(Have ready: why the phone holds no logic; why the engine is a pure function; why a token is checked even when sign-in is optional.)</em></p></div>
+
+<h2>If something breaks</h2>
+<div class="box">
+  <p><b>App can't reach server</b> → check the backend terminal. Say: <em>"That's the error handling working — it shows a message and a retry instead of crashing."</em></p>
+  <p><b>Nearby doctors spinning</b> → run <code>adb emu geo fix 36.8028 -1.2641</code>. Say: <em>"It falls back to a default location by design, so it never blocks."</em></p>
+  <p><b>Emulator dies</b> → use the screenshots in the deck and keep talking.</p>
+  <p><b>Asked for something you didn't build</b> → <em>"That's not implemented. It's in my roadmap, and here's how I'd approach it."</em> Never invent a feature.</p>
+</div>
+
+<h2>Your closing line</h2>
+<div class="say">
+  <b>Say this:</b> "The part I'd defend is explainability. Every percentage this app shows can be worked out by hand, and the app shows the user which symptoms produced it. In health, a number nobody can explain is either ignored or trusted blindly — and both are dangerous."
+</div>
+
+<a class="top" href="internal-notes.html">Need the full detail? Open the long version →</a>
+
+</main>
+</body>
+</html>
