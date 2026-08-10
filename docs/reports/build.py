@@ -462,11 +462,14 @@ body {{
 }}
 .pagebreak {{ break-after: page; }}
 
-/* The title page carries no running header and no page number. */
+/* Clears the margin box on the title page. Chrome still paints the footer
+   template there, so the cover carries a page number where the reference
+   report carries none; its Word "different first page" setting has no
+   equivalent in print-to-PDF. */
 @page :first {{ margin: 0; }}
 
 /* Cover ------------------------------------------------------------------ */
-.usiu-cover {{ text-align: center; padding: 1in 0.9in 0; }}
+.usiu-cover {{ text-align: center; padding: 1in 1in 0; }}
 .cover-logo {{ width: 190px; max-width: 46%; height: auto; margin: 0 auto 22pt; display: block; }}
 .cover-university {{ font-size: 13.5pt; font-weight: bold; letter-spacing: 0.01em; }}
 .cover-school {{ font-size: 12pt; margin-top: 4pt; }}
@@ -508,20 +511,20 @@ h1.cover-title {{
 /* Body ------------------------------------------------------------------- */
 h1.usiu-h1 {{
   font-size: 14pt; font-weight: bold; color: var(--usiu-blue);
-  margin: 20pt 0 8pt; text-align: left; border: none; padding: 0;
+  margin: 14pt 0 6pt; text-align: center; border: none; padding: 0;
   break-after: avoid;
 }}
 h2.usiu-h2 {{
   font-size: 12.5pt; font-weight: bold; color: var(--usiu-blue-dark);
-  margin: 15pt 0 6pt; text-align: left; break-after: avoid;
+  margin: 14pt 0 6pt; text-align: left; break-after: avoid;
 }}
 /* text-transform is reset explicitly: the base stylesheet upper-cases h3, which
    turned "2.1.1 WebMD Symptom Checker" into a shout. */
 h3 {{
-  font-size: 12pt; font-weight: bold; margin: 12pt 0 5pt; text-align: left;
-  text-transform: none; letter-spacing: normal; color: #000000;
+  font-size: 12pt; font-weight: bold; margin: 14pt 0 5pt; text-align: left;
+  text-transform: none; letter-spacing: normal; color: #1C144C;
 }}
-p {{ margin: 0 0 9pt; text-indent: 0.4in; }}
+p {{ margin: 0 0 6pt; text-indent: 0.5in; }}
 /* A paragraph that only introduces a list, table or figure reads better flush. */
 p:has(+ ul), p:has(+ ol), p:has(+ table), p:has(+ figure) {{ text-indent: 0; }}
 li {{ margin: 0 0 5pt; text-align: justify; }}
@@ -571,7 +574,7 @@ def run_make_pdf(binary: str, src: Path, out: Path, meta: dict[str, str], fmt: s
         binary, "generate", str(src), str(out),
         "--to", fmt,
         "--page-size", "a4",
-        "--margins", "0.9in",
+        "--margins", "1in",
         "--no-chapter-breaks",
         "--no-confidential",
         "--quiet",
