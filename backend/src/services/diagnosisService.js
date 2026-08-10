@@ -10,7 +10,7 @@ const { diagnose } = require('./diagnosisEngine');
  * derives the recommended specialist from the top condition, records an
  * anonymised query log, and attaches the safety disclaimer.
  */
-async function runDiagnosis(symptoms) {
+async function runDiagnosis(symptoms, user = null) {
   const store = getDataStore();
   const conditions = await store.getConditions();
 
@@ -36,9 +36,13 @@ async function runDiagnosis(symptoms) {
     specialistInfo = await store.getSpecialistByType(recommendedSpecialist);
   }
 
-  // Anonymised query log: no user identifiers, just the inputs and outcome.
+  // Query log. When a caller is authenticated the entry carries their uid so
+  // History can be scoped to them; anonymous callers log with a null uid as
+  // before. The uid is the only identifier stored -- no email, no name -- so
+  // the log stays minimised while still being attributable to an account.
   await store.logQuery({
     query_id: crypto.randomUUID(),
+    uid: user ? user.uid : null,
     symptoms,
     topConditionId: results.length ? results[0].id : null,
     recommendedSpecialist,

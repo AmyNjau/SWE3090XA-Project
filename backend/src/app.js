@@ -7,6 +7,7 @@ const config = require('./config');
 const diagnoseRoutes = require('./routes/diagnose');
 const providerRoutes = require('./routes/providers');
 const catalogRoutes = require('./routes/catalog');
+const { authenticate } = require('./middleware/auth');
 const { notFound, errorHandler } = require('./middleware/errorHandler');
 
 /**
@@ -26,11 +27,16 @@ function createApp() {
       service: 'smart-health-backend',
       dataStore: config.dataStore,
       providerSource: config.providerSource,
+      authRequired: config.auth.required,
     });
   });
 
-  app.use('/api/diagnose', diagnoseRoutes);
-  app.use('/api/providers', providerRoutes);
+  // The catalogue endpoints stay open: they return the symptom and specialist
+  // lists the sign-in screen needs before anyone has a token, and they expose
+  // no user data. Everything that reasons about a person's symptoms is behind
+  // authentication.
+  app.use('/api/diagnose', authenticate, diagnoseRoutes);
+  app.use('/api/providers', authenticate, providerRoutes);
   app.use('/api', catalogRoutes);
 
   app.use(notFound);

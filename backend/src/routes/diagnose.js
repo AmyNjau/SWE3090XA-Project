@@ -14,7 +14,7 @@ const router = express.Router();
 router.post('/', validateDiagnoseBody, async (req, res, next) => {
   try {
     const { symptoms } = req.body;
-    const payload = await runDiagnosis(symptoms);
+    const payload = await runDiagnosis(symptoms, req.user);
     res.json(payload);
   } catch (err) {
     next(err);

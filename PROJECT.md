@@ -78,7 +78,12 @@ USIU-Africa student).
 **The final milestone of the whole project** is a **submission zip** of this
 folder containing only what the lecturer needs to run the app and read the
 reports. Exclude agent and tooling scaffolding: `CLAUDE.md`, `PROJECT.md`,
-`.gstack/`, `.claude/`, `.git/`, caches.
+`.gstack/`, `.claude/`, `.git/`, caches, and both private defence-notes files.
+Everything inside must be **named so the lecturer can navigate it unaided** —
+descriptive names, not build slugs — with a short README at the top.
+**Use the `-alt-diagrams` build of every report** (the redrawn SVG diagram set)
+so all documents are visually consistent. Ship the PDFs; the DOCX files are
+editable copies only.
 
 ### What that means in practice
 
@@ -389,7 +394,9 @@ a limitation in the end-of-semester report.
 
 - [ ] Zip this folder as the submission, including only what the lecturer needs
       to run the app and read the reports; exclude `CLAUDE.md`, `PROJECT.md`,
-      `.gstack/`, `.claude/`, `.git/` and caches.
+      `.gstack/`, `.claude/`, `.git/`, caches and the private defence notes.
+      Use the `-alt-diagrams` PDFs for every report, and give every file a
+      descriptive name plus a README at the top of the zip.
 - [ ] Add a licence appropriate to Kenyan law.
 
 ### Milestone A — Security hardening of the API
