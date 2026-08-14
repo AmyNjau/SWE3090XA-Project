@@ -16,7 +16,14 @@ mobile/.dart_tool/
 mobile/.flutter-plugins
 mobile/.flutter-plugins-dependencies
 mobile/build/
-mobile/android/
+# android/ IS tracked: it carries hand-made manifest and Gradle changes the app
+# needs (location permissions, cleartext HTTP for the dev API, the url_launcher
+# queries entry, kotlin.incremental=false for Google Drive). Only its
+# machine-specific and generated parts are ignored.
+mobile/android/local.properties
+mobile/android/.gradle/
+mobile/android/.kotlin/
+mobile/android/**/build/
 mobile/ios/
 mobile/web/
 mobile/windows/
@@ -38,6 +45,9 @@ Nipo_IST4078A_Group4_Report.*
 presentation/internal-notes.html
 presentation/internal-notes-simple.html
 
-# Android Studio project files
+# Android Studio caches (the .run/ launch configurations are kept)
 .idea/
 presentation/PRIVATE-Defence-Cheat-Sheet.pdf
+
+# The submission zip is a build artifact, rebuilt by docs/submission/build.py
+Smart-Health-*-Submission.zip

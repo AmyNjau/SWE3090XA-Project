@@ -11,20 +11,25 @@
  */
 const { spawn } = require('child_process');
 const path = require('path');
-const { nodeModulesDir, isInstalled } = require('./deps');
-
-if (!isInstalled()) {
-  console.error(
-    'Dependencies are not installed locally yet.\n' +
-      'Run "npm run setup" first (this project cannot keep node_modules on Google Drive).'
-  );
-  process.exit(1);
-}
+const { nodeModulesDir, isInstalled, isInstalledInProject } = require('./deps');
 
 const env = { ...process.env };
-env.NODE_PATH = env.NODE_PATH
-  ? `${nodeModulesDir}${path.delimiter}${env.NODE_PATH}`
-  : nodeModulesDir;
+
+if (!isInstalledInProject()) {
+  // No node_modules in the project: fall back to the local-disk install that
+  // the Google Drive workaround creates.
+  if (!isInstalled()) {
+    console.error(
+      'Dependencies are not installed yet. Run one of:\n' +
+        '  npm install     (normal machines)\n' +
+        '  npm run setup   (when the project sits on Google Drive, which cannot host node_modules)'
+    );
+    process.exit(1);
+  }
+  env.NODE_PATH = env.NODE_PATH
+    ? `${nodeModulesDir}${path.delimiter}${env.NODE_PATH}`
+    : nodeModulesDir;
+}
 
 const args = process.argv.slice(2);
 const child = spawn(process.execPath, args, { stdio: 'inherit', env });

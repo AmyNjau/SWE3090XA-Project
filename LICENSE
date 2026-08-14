@@ -1,0 +1,92 @@
+Copyright and Terms of Use
+==========================
+
+Smart Health — Symptom Checker and Doctor Recommendation System
+SWE3090XA, Software Engineering Final Project
+United States International University – Africa (USIU-Africa)
+
+Copyright (C) 2026 Amy Wanjugu Njau (student ID 669008). All rights reserved.
+
+
+1. Ownership
+------------
+
+This work — the source code, the reports, the figures, the presentation and all
+other material in this repository — is an original academic work created by Amy
+Wanjugu Njau in fulfilment of the requirements of course SWE3090XA at
+USIU-Africa.
+
+Copyright subsists in it automatically under the Copyright Act, No. 12 of 2001
+(Laws of Kenya), as amended, which protects literary works including computer
+programs and their preparatory design material. No registration or notice is
+required for that protection to exist; this notice is given for clarity only.
+
+Where the University's regulations on student intellectual property apply to
+work submitted for assessment, this notice is subject to them.
+
+
+2. Permitted use
+----------------
+
+Permission is granted, free of charge, to:
+
+  (a) USIU-Africa, its faculty and its examiners, to store, copy, read, run,
+      mark and archive this work for the purposes of assessment, moderation,
+      academic record-keeping and plagiarism checking; and
+
+  (b) any person, to read the source code and the reports and to run the
+      software locally for private study, teaching or non-commercial research,
+
+provided that the author is credited and this notice is reproduced in any copy.
+
+Fair-dealing acts permitted by section 26 of the Copyright Act, 2001 — including
+private study, scientific research, criticism, review and the reporting of
+current events — are unaffected by this notice.
+
+
+3. Restrictions
+---------------
+
+Except as permitted above, the work may not be reproduced, published,
+distributed, adapted, translated or communicated to the public, in whole or in
+part, without the prior written permission of the author. It may not be used for
+any commercial purpose, and it may not be submitted, in whole or in part, by any
+other person as their own academic work.
+
+
+4. Third-party components
+-------------------------
+
+This work depends on third-party software (including Flutter, Node.js, Express
+and the Firebase SDKs) which is not covered by this notice and remains under the
+licence of its respective owner. Those dependencies are declared in
+`backend/package.json` and `mobile/pubspec.yaml` and are not redistributed here.
+
+The USIU-Africa name and logo are used only to identify the institution for
+which this academic work was prepared; they remain the property of the
+University.
+
+
+5. No warranty, and a medical disclaimer
+----------------------------------------
+
+THE WORK IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+PARTICULAR PURPOSE. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY CLAIM,
+DAMAGES OR OTHER LIABILITY ARISING FROM, OUT OF OR IN CONNECTION WITH THE WORK
+OR ITS USE.
+
+Specifically: Smart Health is a **guidance prototype, not a medical device**. Its
+symptom-to-condition knowledge base is an educational rule set that has not been
+clinically validated and has not been approved by any regulatory authority. It
+must not be used to diagnose, treat or make any decision about a real patient. It
+is not a substitute for examination and advice by a qualified medical
+practitioner.
+
+
+6. Contact
+----------
+
+Requests for permission beyond the scope of this notice should be addressed to
+the author through the Department of Computing, School of Science and
+Technology, USIU-Africa.

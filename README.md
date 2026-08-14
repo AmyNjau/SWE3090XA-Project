@@ -41,7 +41,7 @@ without changing engine, route, or UI code.
 cd backend
 npm run setup     # installs deps to local disk (see note below)
 npm start         # http://localhost:3000
-npm test          # 15 tests: engine + API
+npm test          # 25 tests: engine, API, validation, authentication
 ```
 
 **2. Mobile** (requires the Flutter SDK):
@@ -76,10 +76,14 @@ See `backend/README.md` and `mobile/README.md` for full details.
 
 - ✅ Backend: knowledge base, weighted engine, specialist routing, provider
   lookup (mock + Maps-ready), caching, validation, query logging, disclaimer.
-- ✅ Tests: 15 backend tests passing; Flutter widget/model tests included.
+- ✅ Authentication: Firebase email/password sign-in in the app; the API verifies
+  every ID token it is given (`backend/src/middleware/auth.js`) and can be set to
+  require one (`AUTH_REQUIRED=true`).
+- ✅ Tests: 25 backend tests passing; Flutter widget/model tests included.
 - ✅ Mobile: premium tabbed shell (Home, Check, History, Profile) with a
   dashboard, the full symptom→conditions→providers flow, explainable
   "why this match" results, in-app history (Query entity), and a profile
   (User entity). Shared theme, graceful location fallback, live Directions.
-- ⏭️ Next: real Firestore + Google Maps keys, auth, clinical validation of the
-  knowledge base, accessibility hardening, UAT.
+- ⏭️ Next: real Firestore + Google Maps keys, API hardening (rate limiting, CORS
+  allow-list, security headers), clinical validation of the knowledge base,
+  accessibility hardening, UAT.
