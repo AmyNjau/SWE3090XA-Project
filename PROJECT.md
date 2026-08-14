@@ -333,6 +333,35 @@ submission.
    `FIREBASE_PROJECT_ID` the API rejects every ID token. The zip now ships a
    `backend/.env`.
 
+**Found by the sub-agent review of PR #5, and fixed:**
+
+4. **The deck and the end-of-semester report still claimed 15 tests** (there are
+   25), and the deck's Q&A slide claimed "HTTPS throughout" while the delivered
+   app talks cleartext HTTP to the dev API. Report, deck and standalone build all
+   corrected and rebuilt; Table 6.1 now lists all 25 tests.
+5. **The zip was not reproducible from the repository.** `gradlew`,
+   `gradlew.bat` and `gradle-wrapper.jar` are ignored by the Flutter template's
+   `.gitignore`, so they reached the archive from untracked working-tree state
+   and a fresh clone could not build. Now tracked (with `gradlew text eol=lf` in
+   `.gitattributes`, or it breaks on macOS), and `build.py` fails on any
+   untracked file it would ship.
+6. **`build.py` could not see private material inside a shipped file** — only
+   filenames. It now also scans shipped HTML/Markdown/text for the
+   presenter-script phrases.
+7. Smaller: `backend/package.json` said MIT while `LICENSE` reserves all rights;
+   `mobile/README.md` documented a Chrome/web run that always fails since
+   sign-in was added; the Android Studio path needed `flutter pub get` first
+   (it writes `local.properties`, which `settings.gradle.kts` reads unguarded);
+   a failed build left an 8 MB `.tmp` that the ignore pattern missed; the zip
+   swap was not atomic; machine-specific commentary and Flutter template TODOs
+   shipped in `mobile/android/`.
+
+**Also fixed in `docs/reports/build.py`:** its heading-uniqueness guard rejected
+a perfectly-rendered page because `pdftotext -layout` merges a heading with the
+header row of a table directly beneath it into one extracted line. It now accepts
+a heading followed by a column gap (two or more spaces). Verified by rendering
+the page and looking at it, not by trusting the extractor.
+
 **Defects found and fixed while verifying PR #2** (the sub-agent review caught
 all four blockers; every one was reproduced before being fixed):
 
@@ -437,13 +466,21 @@ a limitation in the end-of-semester report.
 ### Milestone Z — Submission (done 2026-08-14)
 
 - [x] `docs/submission/build.py` builds
-      `Smart-Health-SWE3090XA-Amy-Njau-669008-Submission.zip` (~8 MB, 110 files):
-      numbered folders in reading order, `-alt-diagrams` PDFs, editable DOCX in a
-      labelled subfolder, the single-file deck, a runnable `backend/` + `mobile/`
-      (Android project and `.env` included), and a README at the top. The build
-      fails if any excluded file — `CLAUDE.md`, `PROJECT.md`, `LAUNCH.md`,
-      `.claude/`, `.gstack/`, `.git/`, caches, the private defence notes — reaches
-      the archive. Rebuild it rather than editing it; it is gitignored.
+      `Smart-Health-SWE3090XA-Amy-Njau-669008-Submission.zip` (6.6 MB, 106 files;
+      the script prints the current figures): `1 - Reports`, `2 - Source Code`,
+      `3 - Diagrams`, `-alt-diagrams` PDFs, editable DOCX in a labelled subfolder,
+      a runnable `backend/` + `mobile/` (Android project and `.env` included), and
+      a README at the top. The build fails if any excluded file — `CLAUDE.md`,
+      `PROJECT.md`, `LAUNCH.md`, `.claude/`, `.gstack/`, `.git/`, caches, the
+      private defence notes — reaches the archive, if a shipped text file contains
+      the presenter-script phrases, or if anything shipped out of `backend/` or
+      `mobile/` is untracked (which would make the zip unreproducible). Rebuild it
+      rather than editing it; it is gitignored.
+- [x] **The deck is deliberately not in the zip.** Its notes panel (`S`) carries
+      the presenting script and a "maximum-marks cue" per slide, and slide 23 is a
+      rehearsal sheet whose own note says it is "for you, not the panel". Shipping
+      it would hand the examiner the coaching notes. A notes-free build of the
+      deck would be needed first; ask the user before adding one.
 - [x] `LICENSE` — Copyright Act, 2001 (Laws of Kenya), academic-use terms,
       medical disclaimer, third-party components noted.
 - [ ] Re-run `python docs/submission/build.py` after any later change, so the zip

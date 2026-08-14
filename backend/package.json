@@ -18,7 +18,8 @@
     "triage"
   ],
   "author": "Amy Wanjugu Njau",
-  "license": "MIT",
+  "private": true,
+  "license": "SEE LICENSE IN ../LICENSE",
   "dependencies": {
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",

@@ -1,8 +1,9 @@
-gradle-wrapper.jar
+# The Gradle wrapper (gradlew, gradlew.bat, gradle/wrapper/gradle-wrapper.jar)
+# is tracked deliberately, against the Flutter template's default: it is how a
+# fresh clone builds with the right Gradle version, and the submission zip is
+# assembled from tracked files.
 /.gradle
 /captures/
-/gradlew
-/gradlew.bat
 /local.properties
 GeneratedPluginRegistrant.java
 .cxx/

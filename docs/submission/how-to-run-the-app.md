@@ -25,7 +25,7 @@ needed only for the mobile app.
 ## 1. The backend
 
 ```bash
-cd "3 - Source Code/backend"
+cd "2 - Source Code/backend"
 npm install
 npm start
 ```
@@ -41,12 +41,11 @@ curl http://localhost:3000/api/health
 Ask the rule engine for a diagnosis directly — no app needed:
 
 ```bash
-curl -X POST http://localhost:3000/api/diagnose ^
-  -H "Content-Type: application/json" ^
-  -d "{\"symptoms\":[\"fever\",\"chills\",\"headache\"]}"
+curl -X POST http://localhost:3000/api/diagnose -H "Content-Type: application/json" -d "{\"symptoms\":[\"fever\",\"chills\",\"headache\"]}"
 ```
 
-(On macOS or Linux use `\` instead of `^` for the line continuations.)
+That is one line on purpose, so it works in PowerShell, `cmd` and a POSIX shell
+alike.
 
 The response carries the ranked conditions, the `matchedSymptoms` behind each
 score, the recommended specialist and the safety disclaimer.
@@ -80,7 +79,7 @@ the sign-in tokens the app sends.
 ## 2. The mobile app
 
 ```bash
-cd "3 - Source Code/mobile"
+cd "2 - Source Code/mobile"
 flutter pub get
 flutter run --dart-define=API_BASE_URL=http://10.0.2.2:3000
 ```
@@ -96,9 +95,13 @@ If the argument is left out the app falls back to `http://10.0.2.2:3000`.
 
 ### From Android Studio instead
 
-1. **Open** the `3 - Source Code/mobile` folder and let Gradle finish syncing.
-2. Choose the emulator or device in the toolbar.
-3. Pick the **main.dart** run configuration — it is included with the API
+1. Run `flutter pub get` once in `2 - Source Code/mobile` **before opening the
+   project**. It writes `android/local.properties` with the path to your Flutter
+   SDK, which Gradle reads during sync; without it the sync stops with a
+   `FileNotFoundException`.
+2. **Open** the `2 - Source Code/mobile` folder and let Gradle finish syncing.
+3. Choose the emulator or device in the toolbar.
+4. Pick the **main.dart** run configuration — it is included with the API
    address already set — and press **Run**.
 
 If that configuration is missing, add the address by hand under **Run → Edit

@@ -24,10 +24,11 @@
 | Folder | What it holds |
 |---|---|
 | **1 - Reports** | The four written deliverables as PDFs, plus editable Word copies and the earlier coursework submissions. |
-| **2 - Presentation** | The defence slide deck. One self-contained HTML file — double-click it, no internet needed. |
-| **3 - Source Code** | The complete, runnable system: the Node.js API and rule engine (`backend/`) and the Flutter app (`mobile/`), with instructions for running both. |
-| **4 - Diagrams** | The architecture, sequence and entity-relationship diagrams as standalone image files (the same drawings that appear in the reports). |
+| **2 - Source Code** | The complete, runnable system: the Node.js API and rule engine (`backend/`) and the Flutter app (`mobile/`), with instructions for running both. |
+| **3 - Diagrams** | The architecture, sequence and entity-relationship diagrams as standalone image files (the same drawings that appear in the reports). |
 | `LICENCE.txt` | Copyright and terms of use, under the Copyright Act, 2001 (Laws of Kenya). |
+
+The defence presentation is delivered live and is not part of this folder.
 
 ### The reports, in reading order
 
@@ -74,22 +75,21 @@ Google Maps Platform, without changing the engine, the routes or the UI.
 ## How to run it
 
 Full step-by-step instructions, including the emulator and Firebase sign-in, are
-in **`3 - Source Code/How to Run the App.md`**. The short version:
+in **`2 - Source Code/How to Run the App.md`**. The short version:
 
 **1. Start the API** (Node.js 18 or newer):
 
 ```bash
-cd "3 - Source Code/backend"
+cd "2 - Source Code/backend"
 npm install
 npm start                 # http://localhost:3000
 ```
 
-Check it is alive, and see the rule engine answer directly:
+Check it is alive, and see the rule engine answer directly. This is one line on
+purpose, so it works in PowerShell, `cmd` and a POSIX shell alike:
 
 ```bash
-curl -X POST http://localhost:3000/api/diagnose \
-  -H "Content-Type: application/json" \
-  -d "{\"symptoms\":[\"fever\",\"chills\",\"headache\"]}"
+curl -X POST http://localhost:3000/api/diagnose -H "Content-Type: application/json" -d "{\"symptoms\":[\"fever\",\"chills\",\"headache\"]}"
 ```
 
 Run the automated tests (25 tests — engine, API, validation and authentication):
@@ -101,7 +101,7 @@ npm test
 **2. Run the app** (Flutter 3.10 or newer, with an Android emulator or device):
 
 ```bash
-cd "3 - Source Code/mobile"
+cd "2 - Source Code/mobile"
 flutter pub get
 flutter run --dart-define=API_BASE_URL=http://10.0.2.2:3000
 ```

@@ -18,8 +18,8 @@ mobile/.flutter-plugins-dependencies
 mobile/build/
 # android/ IS tracked: it carries hand-made manifest and Gradle changes the app
 # needs (location permissions, cleartext HTTP for the dev API, the url_launcher
-# queries entry, kotlin.incremental=false for Google Drive). Only its
-# machine-specific and generated parts are ignored.
+# queries entry, kotlin.incremental=false for Google Drive). Its machine-specific
+# and regenerated parts are ignored here and in mobile/android/.gitignore.
 mobile/android/local.properties
 mobile/android/.gradle/
 mobile/android/.kotlin/
@@ -50,4 +50,4 @@ presentation/internal-notes-simple.html
 presentation/PRIVATE-Defence-Cheat-Sheet.pdf
 
 # The submission zip is a build artifact, rebuilt by docs/submission/build.py
-Smart-Health-*-Submission.zip
+Smart-Health-*-Submission.zip*
