@@ -299,7 +299,7 @@ const slides = [
       <div class="device"><img src="${A}app_home.png" alt="Smart Health home dashboard"/></div>
     </div></div>
   </div>`,
-  say:`This is your "here's the product" moment. <b>"I built a working cross-platform app on a real backend — not mock-ups. Fourteen conditions, nine specialists, fifteen automated tests passing."</b> Gesture to the phone: <b>"Clean tabbed home — Check, History, Profile — with the safety disclaimer visible at all times."</b>`,
+  say:`This is your "here's the product" moment. <b>"I built a working cross-platform app on a real backend — not mock-ups. Fifteen conditions, nine specialists, twenty-five automated tests passing."</b> Gesture to the phone: <b>"Clean tabbed home — Check, History, Profile — with the safety disclaimer visible at all times."</b>`,
   mark:`<b>Maximum-marks cue:</b> Emphasise <b>"swappable"</b> — local JSON and mock providers sit behind clean interfaces so Firestore and Google Maps drop in without touching the engine, route, or UI. That's the design-quality mark.`
 },
 /* 3 — TECH STACK */
@@ -598,7 +598,7 @@ src/
         <div class="card"><h3>Unit</h3><p>Engine scoring &amp; ranking on known symptom sets.</p></div>
         <div class="card"><h3>Integration</h3><p>API + engine + data + Maps working as a whole.</p></div>
         <div class="card"><h3>User acceptance</h3><p>End-to-end clarity, correctness &amp; error handling.</p></div>
-        <p class="muted" style="font-size:14px"><b>15 automated backend tests</b> + Flutter widget/model tests, all green.</p>
+        <p class="muted" style="font-size:14px"><b>25 automated backend tests</b> + Flutter widget/model tests, all green.</p>
       </div>
     </div></div>
   </div>`,
@@ -694,7 +694,7 @@ src/
       <ul class="clean" style="margin-top:14px">
         <li style="color:#e6eefb"><b style="color:#fff">Built &amp; running</b> — Flutter app on a live Node/Express API, demoed end-to-end today.</li>
         <li style="color:#e6eefb"><b style="color:#fff">Explainable &amp; safe</b> — every result is auditable; guidance-only by design.</li>
-        <li style="color:#e6eefb"><b style="color:#fff">Loosely coupled &amp; tested</b> — one API boundary, 15 passing tests, graceful failure.</li>
+        <li style="color:#e6eefb"><b style="color:#fff">Loosely coupled &amp; tested</b> — one API boundary, 25 passing tests, graceful failure.</li>
       </ul>
       <p class="lede" style="color:#cddcf5;margin-top:20px">"A sustainable, adaptable architecture — a working prototype with a credible road to a production-ready platform."</p>
       <div style="margin-top:22px"><span class="badge-live"><span class="dot"></span> Thank you — I'd welcome your questions</span></div>
@@ -714,7 +714,7 @@ src/
         <div class="card"><h3>"How accurate is it?"</h3><p>Accuracy is bounded by rule coverage — it's an educational KB, not clinically validated. It's a triage guide, not a diagnosis. Next step: validate against medical references.</p></div>
         <div class="card"><h3>"What if location is denied / offline?"</h3><p>Shown live: default-location banner, flow continues; network failure gives a retry, never a crash.</p></div>
         <div class="card"><h3>"How does it scale?"</h3><p>Stateless API → horizontal scaling behind a load balancer; caching + optional queue for async logging.</p></div>
-        <div class="card"><h3>"Is it secure?"</h3><p>HTTPS throughout, server-side Maps key, validated input, consent-gated location, data minimisation.</p></div>
+        <div class="card"><h3>"Is it secure?"</h3><p>Firebase ID tokens verified server-side, Maps key never leaves the server, validated input, consent-gated location, data minimisation. Cleartext HTTP only against the local dev API &mdash; TLS is required for deployment and is listed as further work.</p></div>
         <div class="card"><h3>"Why mock Firestore &amp; Maps now?"</h3><p>Clean interfaces let real services drop in later without changing engine, route or UI — deliberate, not a shortcut.</p></div>
       </div>
     </div>

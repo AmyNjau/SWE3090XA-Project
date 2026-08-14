@@ -38,6 +38,99 @@ flutter run -d emulator-5554 --dart-define=API_BASE_URL=http://10.0.2.2:3000
 > `mobile/` in this repo; if you edit it, copy the changed files into the local
 > copy before running.
 
+## Demo-day performance checklist
+
+The single biggest cause of a laggy demo was the **emulator running without GPU
+acceleration**. Verify it before you present:
+
+```powershell
+& "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe" shell dumpsys SurfaceFlinger | Select-String "GLES:"
+```
+
+It must name your real GPU (e.g. `Intel(R) Iris(R) Xe Graphics`). If it says
+`SwiftShader` or `Android Emulator OpenGL ES Translator (Google (Google))`,
+Android is rendering in **software** and Flutter will crawl. Fix it in
+`C:\Users\amnja\.android\avd\swe_pixel.avd\config.ini`:
+
+```ini
+hw.gpu.enabled=yes
+hw.gpu.mode=host
+hw.ramSize=3072      ; 2G is too tight for an Android 36 image
+vm.heapSize=512
+hw.lcd.depth=32
+```
+
+The emulator must be **cold-restarted** for these to apply.
+
+**Pre-grant location**, or the first tap on "Find Nearby Doctors" shows a long
+spinner *and then* a permission dialog — which looks broken in front of an
+audience:
+
+```powershell
+& "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe" shell pm grant com.example.smart_health android.permission.ACCESS_FINE_LOCATION
+& "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe" shell pm grant com.example.smart_health android.permission.ACCESS_COARSE_LOCATION
+```
+
+**Run the emulator as its own window, not inside Android Studio, if you want to
+scroll with the mouse wheel.**
+
+- **Standalone emulator app** — the mouse wheel scrolls correctly (verified both
+  directions). Click-and-drag also works.
+- **Android Studio's embedded tool window** — the wheel does nothing. The IDE
+  swallows it. Only click-and-drag works there.
+
+Launch it standalone with:
+
+```powershell
+& "$env:LOCALAPPDATA\Android\Sdk\emulator\emulator.exe" -avd swe_pixel -gpu host
+```
+
+To stop Studio grabbing it back, turn off **Settings → Tools → Emulator →
+Launch in a tool window**.
+
+The guest has no wheel device at all (only `virtio_input_multi_touch_*`, no
+`REL_WHEEL`) — the standalone emulator translates host wheel into a touch scroll
+itself, which is why it works without any configuration.
+
+> **Do not try to "fix" the wheel with `VirtioTablet = off` in
+> `~/.android/advancedFeatures.ini`.** It does create a real `QEMU Virtio Mouse`
+> with `REL_WHEEL`, and adb-injected taps and drags keep working — but it stops
+> **real mouse clicks registering at all** in the embedded emulator. This was
+> tried and reverted. If that file exists, delete it and cold-boot.
+
+**Check the window fits the screen.** The emulator opened 881 px tall on an
+816 px work area, leaving most of it off-screen above the top edge. Drag it back
+or resize before presenting.
+
+Note the **home screen's content fits the viewport, so scrolling on Home does
+nothing** — that is correct behaviour, not a bug. Use Profile or the providers
+list to demonstrate scrolling.
+
+**Set the emulator location *before* opening Nearby Providers.** If the geo fix
+lands after the screen is already waiting, the 8-second timeout fires and the
+list renders under a *"Using a default location — enable location access"*
+banner, even when permission is granted. Setting it first (and allowing a few
+seconds to settle) makes that banner disappear.
+
+**Build before you present, not during.** Gradle on the `G:` Drive mount is
+roughly **14× slower** than local disk (measured: 1259 s vs 89 s for the same
+profile APK), because `G:` is a Drive File Stream virtual filesystem and every
+one of Gradle's thousands of small file operations pays driver overhead. Press
+**Run** once well before the presentation so the build is warm; during the demo
+you are then launching an already-built app.
+
+> **If a Gradle task fails with `AccessDeniedException` on a folder under
+> `mobile/build`**, Drive is holding a lock that even `Remove-Item` cannot
+> break. Deleting fails, but **renaming the folder works** — rename it and
+> Gradle recreates it cleanly. This happens especially after switching
+> `--target-platform`, which leaves stale per-ABI folders behind.
+
+Measured on the fixed setup (profile build, GPU on): warm launch ~5.6 s, and
+**zero** `Choreographer: Skipped frames` warnings across 20 sustained scroll
+gestures. Note that once the GPU is enabled, debug and profile measured
+essentially the same on these metrics (5.8 s vs 5.6 s warm launch) — the GPU
+setting was the real fix, not the build mode.
+
 ## Demo tips
 
 - **Start the backend first and keep its window visible.** When you tap
@@ -115,9 +208,20 @@ There is no CLI command for it. Until it is enabled, sign-in fails with
    > layer cannot host the memory-mapped files the Kotlin incremental compiler
    > uses, and Kotlin cannot compute relative paths between the pub cache on `C:`
    > and a project on `G:` (*"different roots"*). The fix is
-   > `kotlin.incremental=false` in `mobile/android/gradle.properties`, which is
-   > committed. Do not remove it, or the build breaks again. Rebuilds are a
-   > little slower as a result.
+   > `kotlin.incremental=false` in `mobile/android/gradle.properties`. Do not
+   > remove it, or the build breaks again. Rebuilds are a little slower as a
+   > result.
+   >
+   > **`mobile/android/` is tracked** (since the submission milestone), because
+   > it carries hand-made changes the app depends on: that flag, the location
+   > permissions and cleartext-HTTP setting in the manifest, the `url_launcher`
+   > `<queries>` entry, and the Firebase Gradle wiring. Ignored inside it:
+   > `local.properties`, `.gradle/`, `.kotlin/`, build output, `/captures/`,
+   > `.cxx/`, keystores, and `GeneratedPluginRegistrant.java` (regenerated by
+   > `flutter pub get`). The Gradle wrapper **is** tracked, against the Flutter
+   > template's default, so a fresh clone builds. If the folder is ever
+   > regenerated with `flutter create .`, all the hand-made changes have to be
+   > re-applied — see `mobile/README.md`.
    >
    > If a build ever fails oddly after switching branches or settings, run
    > `flutter clean` first — stale Gradle state on Drive does not recover on its
@@ -153,9 +257,9 @@ that is expected once and then cached.
 
 ### Android — one-time wiring
 
-`mobile/android/` is generated by `flutter create` and is not tracked here, so
-the Firebase wiring lives only in the local build copy at
-`C:\Users\amnja\swe3090xa-mobile`. If that copy is recreated, redo these:
+`mobile/android/` is generated by `flutter create`. It is now tracked, wiring
+included, so this is only needed if the folder is regenerated (or if the local
+build copy at `C:\Users\amnja\swe3090xa-mobile` is recreated):
 
 1. Write the Android config to `android/app/google-services.json`:
 

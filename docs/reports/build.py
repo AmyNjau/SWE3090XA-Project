@@ -626,29 +626,46 @@ def first_body_page(pages: list[str]) -> int:
 def locate_headings(pages: list[str], headings: list[dict], start: int) -> dict[str, int]:
     """Map heading id -> 1-based page number of its occurrence in the body.
 
-    A body heading occupies a line of its own, so it is matched as a whole line.
-    Contents rows never match: they always carry a page number on the same line
-    (a placeholder on the first pass), and the running header is a different
-    string again. Matching advances a cursor, so headings are also required to
-    appear in source order.
+    A body heading occupies a line of its own, so it is matched as a whole line
+    -- with one allowance. `pdftotext -layout` reconstructs columns by vertical
+    position, so when a heading sits close above a table it merges the heading
+    and the table's header row into a single extracted line
+    ("7.1 Objectives Achieved      Outcome      Evidence") even though the
+    rendered page is perfectly correct. A heading followed by a run of two or
+    more spaces is therefore treated as that heading: prose never contains a
+    column gap, so this cannot swallow an ordinary sentence that merely starts
+    with the same words.
+
+    Contents rows never match: they sit before `start`. Matching advances a
+    cursor, so headings are also required to appear in source order.
     """
-    # Flatten to (page index, line) so the cursor can advance past a matched
-    # line rather than only to its page. Advancing by page let a repeated
-    # heading title re-match its own earlier occurrence and be numbered wrongly.
+    # Flatten to (page index, collapsed line, raw line) so the cursor can
+    # advance past a matched line rather than only to its page. Advancing by
+    # page let a repeated heading title re-match its own earlier occurrence and
+    # be numbered wrongly.
     flat = [
-        (i, re.sub(r"\s+", " ", ln).strip())
+        (i, re.sub(r"\s+", " ", ln).strip(), ln.strip())
         for i, page in enumerate(pages)
         if i >= start
         for ln in page.splitlines()
     ]
+
+    def matches(entry: tuple[int, str, str], needle: str) -> bool:
+        _, collapsed, raw = entry
+        if collapsed == needle:
+            return True
+        rest = raw[len(needle):] if raw.startswith(needle) else ""
+        return bool(rest) and rest[:2] == "  "
 
     # Every heading title must occur in the body exactly as many times as it is
     # used as a heading. Anything else -- a repeated title, or a title that also
     # appears as an ordinary body line -- makes the mapping ambiguous, and both
     # passes would agree on the same wrong answer, so the drift check cannot
     # catch it. Refuse instead of numbering it wrongly.
-    body_counts = Counter(line for _, line in flat)
     wanted = Counter(re.sub(r"\s+", " ", h["text"]).strip() for h in headings)
+    body_counts = Counter(
+        {title: sum(1 for e in flat if matches(e, title)) for title in wanted}
+    )
     ambiguous = sorted(t for t, n in wanted.items() if body_counts.get(t, 0) != n)
     if ambiguous:
         die(
@@ -665,7 +682,7 @@ def locate_headings(pages: list[str], headings: list[dict], start: int) -> dict[
     for h in headings:
         needle = re.sub(r"\s+", " ", h["text"]).strip()
         for j in range(cursor, len(flat)):
-            if flat[j][1] == needle:
+            if matches(flat[j], needle):
                 found[h["id"]] = flat[j][0] + 1
                 cursor = j + 1
                 break

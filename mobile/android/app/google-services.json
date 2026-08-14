@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "171400267730",
+    "project_id": "smart-health-swe3090xa",
+    "storage_bucket": "smart-health-swe3090xa.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:171400267730:android:c4492f5d05fbf9b783aa0b",
+        "android_client_info": {
+          "package_name": "com.example.smart_health"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB79kZJr8DhjNzPCMzN0urOmEF3cSZIovo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

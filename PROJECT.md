@@ -8,7 +8,7 @@ this file first**, then `CLAUDE.md` (rules), `README.md` (architecture) and
 - **Default branch:** `main`
 - **Local path:** `G:\My Drive\Claude\SWE3090XA` (Google Drive — see the constraint below)
 - **Author:** Amy Wanjugu Njau (ID 669008) · Supervisor: Mr Fredrick Ogore · USIU-Africa
-- **Last updated:** 2026-08-10
+- **Last updated:** 2026-08-14
 
 ---
 
@@ -161,8 +161,10 @@ src/
     catalog.js                  GET /api/symptoms, GET /api/specialists
   middleware/
     validate.js                 request-body validation → 400s
+    auth.js                     Firebase ID token → req.user (verified whenever supplied)
     errorHandler.js             404 + central error handler (never leaks internals on 5xx)
   services/
+    authService.js              ID-token verification via firebase-admin (lazy-loaded)
     diagnosisEngine.js          PURE scoring — no I/O, trivially unit-testable
     diagnosisService.js         orchestration: engine + specialist + query log + disclaimer
     providerService.js          mock (haversine ranking) | google (Nearby Search) + TTL cache
@@ -176,7 +178,7 @@ src/
     specialists.json            9 specialists (+ Maps search keywords)
     providers.json              12 sample providers
   utils/geo.js                  haversine distance
-tests/                          15 tests (node:test) — api.test.js + diagnosisEngine.test.js
+tests/                          25 tests (node:test) — api / auth / diagnosisEngine
 scripts/                        setup.js / run.js / deps.js — the Google Drive workaround
 ```
 
@@ -191,9 +193,11 @@ a normalised 0..1 confidence. Filter below `threshold` (0.2), sort descending, c
 lib/
   config.dart                   API_BASE_URL via --dart-define; Nairobi fallback coords
   main.dart, theme/app_theme.dart
-  screens/                      main_shell (tabbed) + home, symptom_input, results,
-                                providers, history, profile, notifications
+  screens/                      auth_gate + sign_in, main_shell (tabbed) + home,
+                                symptom_input, results, providers, history,
+                                profile, notifications
   services/api_service.dart     the ONLY point of contact with the API
+  services/auth_service.dart    Firebase email/password sign-in + ID tokens
   services/location_service.dart
   state/history_store.dart      in-app Query history
   models/                       symptom, condition, diagnosis_result, provider
@@ -226,7 +230,17 @@ without scrolling at 1280×720 → 1920×1080.
 ### Docs at the repo root
 
 `README.md` (architecture + report mapping), `LAUNCH.md` (demo run instructions),
-`CLAUDE.md` (rules for agents), plus the submitted `.docx`/`.pdf` reports.
+`CLAUDE.md` (rules for agents), `LICENSE` (Kenyan copyright terms), plus the
+submitted `.docx`/`.pdf` reports.
+
+### `docs/submission/` — the deliverable zip
+
+`build.py` assembles the lecturer-facing submission from the rest of the repo:
+renamed reports, the single-file deck, a runnable copy of the code, and
+`submission-readme.md` / `how-to-run-the-app.md` written for a marker rather than
+for the author. It refuses to produce an archive containing anything internal.
+Run `python docs/submission/build.py` after any change that belongs in the
+submission.
 
 ---
 
@@ -255,7 +269,10 @@ without scrolling at 1280×720 → 1920×1080.
 - ✅ Backend: knowledge base, weighted explainable engine, specialist routing,
   provider lookup (mock + Maps-ready), TTL cache, validation, anonymised query
   logging, central disclaimer.
-- ✅ **15/15 backend tests passing** (`cd backend && npm test`, verified 2026-08-09).
+- ✅ **25/25 backend tests passing** (`cd backend && npm test`, verified 2026-08-14) —
+  engine, API, validation, error handling and Firebase ID-token verification.
+- ✅ Firebase email/password sign-in end to end: auth gate in the app, ID token on
+  every API call, token verification in `backend/src/middleware/auth.js`.
 - ✅ Mobile: tabbed shell (Home, Check, History, Profile), full
   symptom → conditions → providers flow, "why this match" explainability chips,
   in-app history, profile, graceful location-permission fallback, live Directions.
@@ -271,8 +288,10 @@ without scrolling at 1280×720 → 1920×1080.
 
 - `FirestoreDataStore` is a stub that throws — `DATA_STORE=local` is the only working store.
 - Query log is in-memory and lost on restart.
-- No authentication; the knowledge base is not clinically validated.
-- No CI pipeline.
+- The knowledge base is not clinically validated.
+- `AUTH_REQUIRED` is off by default, so the API still answers anonymous callers
+  in the demo configuration (a supplied token is always verified).
+- No CI pipeline; API hardening (Milestone A) is still outstanding.
 
 ---
 
@@ -289,6 +308,59 @@ without scrolling at 1280×720 → 1920×1080.
 | 2026-07–08 | **PR #1** | Notes-overlap fix, phone-ready standalone build, `CLAUDE.md`, this file |
 | 2026-08-10 | **PR #2** | USIU brand assets + `docs/reports/build.py` branded report pipeline; System Integration Report rebuilt from markdown |
 | 2026-08-10 | **PR #3** | End-of-semester report; two diagram sets per report (original vs redrawn) |
+| 2026-08-10 | **PR #4** | Firebase sign-in (app + API token verification), private defence notes, logbook, reference-matched report formatting |
+| 2026-08-14 | **PR #5** | **Submission package** — `docs/submission/build.py` builds the lecturer-facing zip; Kenyan-law licence; `mobile/android/` tracked; Android manifest defect fixed |
+
+**Defects found and fixed while building the submission (PR #5):**
+
+1. **The Android app could never get a location.** When `mobile/android/` was
+   regenerated so the app would build from the Drive folder (commit `e084fae`),
+   the hand-made manifest changes were lost: `ACCESS_FINE_LOCATION` and
+   `ACCESS_COARSE_LOCATION` were gone, so the runtime permission could not be
+   granted and every nearby-provider lookup silently fell back to the default
+   Nairobi coordinates. The `<queries>` entry for `url_launcher` (the Directions
+   button, needed on Android 11+) and `usesCleartextTraffic` had gone with them.
+   Found by diffing the Drive copy against `C:\Users\amnja\swe3090xa-mobile`,
+   which still had all three. Fixed, and `mobile/android/` is now **tracked** so
+   it cannot happen again.
+2. **`npm install` did not work off Google Drive.** `scripts/run.js` refused to
+   start unless the local-disk workaround had been run, so the submitted copy
+   would have failed on the marker's machine with a message about Google Drive —
+   and `backend/README.md` already claimed a normal install worked. It now uses
+   a project-local `node_modules` when one exists. Verified by installing and
+   running the tests from the extracted zip: 25/25 pass.
+3. **Signed-in requests would have 500'd.** `.env` is gitignored, and without
+   `FIREBASE_PROJECT_ID` the API rejects every ID token. The zip now ships a
+   `backend/.env`.
+
+**Found by the sub-agent review of PR #5, and fixed:**
+
+4. **The deck and the end-of-semester report still claimed 15 tests** (there are
+   25), and the deck's Q&A slide claimed "HTTPS throughout" while the delivered
+   app talks cleartext HTTP to the dev API. Report, deck and standalone build all
+   corrected and rebuilt; Table 6.1 now lists all 25 tests.
+5. **The zip was not reproducible from the repository.** `gradlew`,
+   `gradlew.bat` and `gradle-wrapper.jar` are ignored by the Flutter template's
+   `.gitignore`, so they reached the archive from untracked working-tree state
+   and a fresh clone could not build. Now tracked (with `gradlew text eol=lf` in
+   `.gitattributes`, or it breaks on macOS), and `build.py` fails on any
+   untracked file it would ship.
+6. **`build.py` could not see private material inside a shipped file** — only
+   filenames. It now also scans shipped HTML/Markdown/text for the
+   presenter-script phrases.
+7. Smaller: `backend/package.json` said MIT while `LICENSE` reserves all rights;
+   `mobile/README.md` documented a Chrome/web run that always fails since
+   sign-in was added; the Android Studio path needed `flutter pub get` first
+   (it writes `local.properties`, which `settings.gradle.kts` reads unguarded);
+   a failed build left an 8 MB `.tmp` that the ignore pattern missed; the zip
+   swap was not atomic; machine-specific commentary and Flutter template TODOs
+   shipped in `mobile/android/`.
+
+**Also fixed in `docs/reports/build.py`:** its heading-uniqueness guard rejected
+a perfectly-rendered page because `pdftotext -layout` merges a heading with the
+header row of a table directly beneath it into one extracted line. It now accepts
+a heading followed by a column gap (two or more spaces). Verified by rendering
+the page and looking at it, not by trusting the extractor.
 
 **Defects found and fixed while verifying PR #2** (the sub-agent review caught
 all four blockers; every one was reproduced before being fixed):
@@ -360,7 +432,8 @@ over its own heading. The measurement has to target the thing that actually brea
 ## 7. Roadmap — what is planned next
 
 **The user's delivery order takes precedence over the milestone letters below.**
-Next up is Firebase login, then the internal notes deck. The security work in
+Firebase login, the internal notes deck and the submission package are done.
+The security work in
 Milestone A remains the top *engineering* priority and is already written up as
 a limitation in the end-of-semester report.
 
@@ -390,14 +463,28 @@ a limitation in the end-of-semester report.
       questions, weighted to code and backend. Never shown to the lecturer.
 - [ ] Refresh the lecturer-facing deck to match the delivered system.
 
-### Milestone Z — Submission (last milestone of the project)
+### Milestone Z — Submission (done 2026-08-14)
 
-- [ ] Zip this folder as the submission, including only what the lecturer needs
-      to run the app and read the reports; exclude `CLAUDE.md`, `PROJECT.md`,
-      `.gstack/`, `.claude/`, `.git/`, caches and the private defence notes.
-      Use the `-alt-diagrams` PDFs for every report, and give every file a
-      descriptive name plus a README at the top of the zip.
-- [ ] Add a licence appropriate to Kenyan law.
+- [x] `docs/submission/build.py` builds
+      `Smart-Health-SWE3090XA-Amy-Njau-669008-Submission.zip` (6.6 MB, 106 files;
+      the script prints the current figures): `1 - Reports`, `2 - Source Code`,
+      `3 - Diagrams`, `-alt-diagrams` PDFs, editable DOCX in a labelled subfolder,
+      a runnable `backend/` + `mobile/` (Android project and `.env` included), and
+      a README at the top. The build fails if any excluded file — `CLAUDE.md`,
+      `PROJECT.md`, `LAUNCH.md`, `.claude/`, `.gstack/`, `.git/`, caches, the
+      private defence notes — reaches the archive, if a shipped text file contains
+      the presenter-script phrases, or if anything shipped out of `backend/` or
+      `mobile/` is untracked (which would make the zip unreproducible). Rebuild it
+      rather than editing it; it is gitignored.
+- [x] **The deck is deliberately not in the zip.** Its notes panel (`S`) carries
+      the presenting script and a "maximum-marks cue" per slide, and slide 23 is a
+      rehearsal sheet whose own note says it is "for you, not the panel". Shipping
+      it would hand the examiner the coaching notes. A notes-free build of the
+      deck would be needed first; ask the user before adding one.
+- [x] `LICENSE` — Copyright Act, 2001 (Laws of Kenya), academic-use terms,
+      medical disclaimer, third-party components noted.
+- [ ] Re-run `python docs/submission/build.py` after any later change, so the zip
+      never lags behind the repo.
 
 ### Milestone A — Security hardening of the API
 
@@ -453,7 +540,7 @@ Concrete gaps found by reading `backend/src` on 2026-08-09:
 cd backend
 npm run setup     # FIRST TIME ONLY — installs deps to local disk (Drive workaround)
 npm start         # http://localhost:3000
-npm test          # 15 tests
+npm test          # 25 tests
 
 # Mobile (from the local-disk copy, not Drive)
 cd C:\Users\amnja\swe3090xa-mobile

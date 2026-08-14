@@ -89,7 +89,7 @@ an opaque machine-learning model in a safety-sensitive domain.
 
 The delivered system implements a knowledge base of 15 conditions, 35 symptoms,
 and 9 specialist types, exposes five REST endpoints, and is verified by an
-automated suite of 15 tests, all of which pass. Functional and non-functional
+automated suite of 25 tests, all of which pass. Functional and non-functional
 requirements defined at the midterm stage were met, including deterministic
 results, graceful degradation when location permission is denied, and a guidance
 disclaimer attached centrally to every diagnosis response so that it cannot be
@@ -791,8 +791,11 @@ can be visually emphasised.
 Validation combined three levels. Unit tests exercise the diagnostic engine in
 isolation, confirming that scores are computed, normalised, filtered, and ranked
 correctly for known symptom sets. Integration tests drive the HTTP API with the
-engine, data store, and provider service wired together. Acceptance testing
-walked the complete user journey on an Android emulator against a live backend.
+engine, data store, and provider service wired together, and cover the
+authentication middleware: that a supplied token is always verified, that an
+anonymous request is admitted only when the configuration allows it, and that a
+rejection never discloses why a token failed. Acceptance testing walked the
+complete user journey on an Android emulator against a live backend.
 
 The engine was written as a pure function specifically so that the most
 safety-critical logic could be tested exhaustively without network, database, or
@@ -800,9 +803,9 @@ user interface in the way.
 
 ## 6.2 Automated Test Results
 
-The automated suite comprises 15 tests and is executed with `npm test`. All 15
+The automated suite comprises 25 tests and is executed with `npm test`. All 25
 pass. The suite is listed in full below because it constitutes the primary
-evidence that the functional and reliability requirements are met.
+evidence that the functional, security, and reliability requirements are met.
 
 | Test | Level | Requirement verified | Result |
 |---|---|---|---|
@@ -812,6 +815,16 @@ evidence that the functional and reliability requirements are met.
 | `POST /api/providers` returns providers ranked by distance | Integration | Functional requirement 4 | Pass |
 | `POST /api/providers` rejects missing coordinates with 400 | Integration | Input validation | Pass |
 | `GET /api/symptoms` returns the catalogue | Integration | Symptom input support | Pass |
+| A valid ID token authenticates the request | Integration | Authentication | Pass |
+| An invalid ID token is rejected with 401 | Integration | Authentication | Pass |
+| A supplied token is verified even when authentication is optional | Integration | Forged tokens never accepted | Pass |
+| Anonymous requests are allowed when authentication is not required | Integration | Demo configuration | Pass |
+| Anonymous requests are rejected when authentication is required | Integration | Access control | Pass |
+| The catalogue stays public so the app can load before sign-in | Integration | Startup without credentials | Pass |
+| A malformed `Authorization` header is treated as no token | Integration | Robustness to bad input | Pass |
+| An authenticated diagnosis is logged against the caller's uid | Integration | Query logging | Pass |
+| An anonymous diagnosis is logged with a null uid | Integration | Query logging | Pass |
+| The error message never leaks why a token failed | Integration | Information disclosure | Pass |
 | `scoreCondition` returns 1.0 when all symptoms match | Unit | Scoring upper bound | Pass |
 | `scoreCondition` normalises a partial match | Unit | Normalisation | Pass |
 | `scoreCondition` ignores unknown symptoms | Unit | Robustness to bad input | Pass |
@@ -822,7 +835,7 @@ evidence that the functional and reliability requirements are met.
 | `diagnose` de-duplicates repeated symptoms | Unit | Input hygiene | Pass |
 | `diagnose` respects maxResults | Unit | Result capping | Pass |
 
-*Table 6.1: Automated test suite, 15 of 15 passing.*
+*Table 6.1: Automated test suite, 25 of 25 passing.*
 
 ## 6.3 Acceptance Test Cases
 
@@ -981,7 +994,7 @@ The project set out to close a specific gap: the absence of a tool that combines
 explainable symptom analysis, specialist routing, and localised provider
 recommendation in a form suited to low-connectivity, developing-region contexts.
 The delivered system does so end to end, and its behaviour is backed by an
-automated suite of 15 tests, all passing.
+automated suite of 25 tests, all passing.
 
 The rule-based approach proved to be the correct choice for this problem. It
 produced ranked, defensible results; it made the reasoning available to the user

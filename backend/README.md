@@ -48,10 +48,12 @@ cd backend
 npm run setup      # installs deps to local disk (one time, and after dep changes)
 npm start          # http://localhost:3000
 npm run dev        # same, with --watch auto-reload
-npm test           # engine unit tests + API integration tests
+npm test           # 25 tests: engine, API, validation, authentication
 ```
 
-If you are **not** on Google Drive, a normal `npm install` also works.
+If you are **not** on Google Drive, a normal `npm install` also works: when
+`node_modules` exists inside the project, the scripts use it and skip the
+local-disk workaround entirely.
 
 ## Configuration
 
@@ -63,6 +65,9 @@ Copy `.env.example` to `.env` to override defaults (all optional):
 | `DATA_STORE`      | `local` | `local` (JSON files) or `firestore`            |
 | `PROVIDER_SOURCE` | `mock`  | `mock` (sample data) or `google` (Maps API)    |
 | `MAPS_API_KEY`    | —       | Required when `PROVIDER_SOURCE=google`         |
+| `FIREBASE_PROJECT_ID` | —   | Project whose ID tokens are accepted; also used by `DATA_STORE=firestore`. Required as soon as the app signs in — without it every token is rejected with a 500 naming this variable. |
+| `AUTH_REQUIRED`   | `false` | When `true`, `/api/diagnose` and `/api/providers` reject anonymous requests. A token that *is* supplied is verified either way, so a forged token is never accepted. |
+| `GOOGLE_APPLICATION_CREDENTIALS` | — | Path to a service-account key. Optional: on Google infrastructure the default credentials are used. |
 
 ## API
 
